@@ -113,7 +113,7 @@ def execute_local_command(command, output_format=None):
     rc = p.returncode
     if rc != 0:
         return 'Failed to execute command "{}": {}'.format(
-            command, error.decode().strip()), None
+            command, output.decode().strip()), None
     if output_format == 'json':
         message = json.loads(output.decode().strip())
         return message.get('message'), message.get('media')
