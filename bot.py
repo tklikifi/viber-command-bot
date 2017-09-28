@@ -2,7 +2,6 @@
 
 import json
 import logging
-import re
 import sched
 import subprocess
 import sys
@@ -11,7 +10,7 @@ import time
 from flask import Flask, request, Response
 from viberbot import Api
 from viberbot.api.bot_configuration import BotConfiguration
-from viberbot.api.messages import PictureMessage, URLMessage, VideoMessage
+from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
 from viberbot.api.viber_requests import ViberConversationStartedRequest
 from viberbot.api.viber_requests import ViberFailedRequest
@@ -31,7 +30,7 @@ except ConfigError as e:
 
 # Set logger.
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(name)s - '
                               '%(levelname)s - %(message)s')
@@ -46,8 +45,9 @@ viber = Api(BotConfiguration(
 
 app = Flask(__name__)
 
+
 def check_user_id(user_id, name=None):
-    if  user_id not in config['Viber bot']['trusted user ids']:
+    if user_id not in config['Viber bot']['trusted user ids']:
         notify = config['Viber bot']['notify user id']
         text = 'Message from untrusted user id: {} ({})'.format(user_id, name)
         logger.warning(text)
@@ -55,6 +55,7 @@ def check_user_id(user_id, name=None):
         return False
     logger.info('Message from trusted user id: {} ({})'.format(user_id, name))
     return True
+
 
 def handle_viber_request(viber_request):
     message = viber_request.message
@@ -64,6 +65,7 @@ def handle_viber_request(viber_request):
     else:
         text = 'You did not send a command.'
         viber.send_messages(viber_request.sender.id, [TextMessage(text=text)])
+
 
 def execute_command(viber_request, command):
     if command == 'help':
@@ -75,20 +77,21 @@ def execute_command(viber_request, command):
                                               'supported.'.format(command))])
     else:
         # Execute local command in another thread.
-        scheduler = sched.scheduler(time.time, time.sleep)
-        scheduler.enter(0, 1, async_command,
-                        (commands[command]['execute'],
-                         commands[command]['output format'],
-                         viber_request.sender.id,))
-        thread = threading.Thread(target=scheduler.run)
-        thread.start()
+        command_thread = threading.Thread(
+            target=run_command, args=(commands[command]['execute'],
+                                      commands[command]['output format'],
+                                      viber_request.sender.id,))
+        command_thread.start()
 
-def async_command(command, output_format, user_id):
+
+def run_command(command, output_format, user_id):
     text, media = execute_local_command(command, output_format)
-    messages = [TextMessage(text=text)]
     if media:
-        messages.append(URLMessage(media=media))
-    viber.send_messages(user_id, messages)
+        viber.send_messages(user_id, [TextMessage(text=text),
+                                      URLMessage(media=media)])
+    else:
+        viber.send_messages(user_id, [TextMessage(text=text)])
+
 
 def show_command_help():
     text = 'Available commands:\n\n'
@@ -100,6 +103,7 @@ def show_command_help():
             text += 'Help is not available for command "{}".'.format(k)
         text += '\n'
     return text
+
 
 def execute_local_command(command, output_format=None):
     logger.debug('Running command: "{}"'.format(command))
@@ -129,33 +133,44 @@ def incoming():
     viber_request = viber.parse_request(request.get_data())
 
     if isinstance(viber_request, ViberConversationStartedRequest):
-        viber.send_messages(viber_request.get_user().get_id(),
-                            [TextMessage(text='Welcome!')])
+        viber.send_messages(viber_request.user.id,
+                            [TextMessage(text='Hello, {}!\n\n{}'.format(
+                                viber_request.user.name,
+                                show_command_help()))])
     elif isinstance(viber_request, ViberMessageRequest):
         if not check_user_id(viber_request.sender.id,
                              name=viber_request.sender.name):
             return Response(status=403)
         handle_viber_request(viber_request)
     elif isinstance(viber_request, ViberSubscribedRequest):
-        viber.send_messages(viber_request.get_user().get_id(),
-                            [TextMessage(text='Thanks for subscribing!')])
+        logger.info('User subscribed: {} ({})'.format(
+            viber_request.user.id, viber_request.user.name))
+        viber.send_messages(viber_request.user.id,
+                            [TextMessage(text='Hello, {}!\n\n{}'.format(
+                                viber_request.user.name,
+                                show_command_help()))])
+    elif isinstance(viber_request, ViberUnsubscribedRequest):
+        logger.info('User un-subscribed: {}'.format(viber_request.user_id))
     elif isinstance(viber_request, ViberFailedRequest):
         logger.warning('Client failed receiving message, failure: '
                        '{0}'.format(viber_request))
 
     return Response(status=200)
 
-# Set webhook after the server has started.
-def set_webhook(viber):
-    viber.set_webhook(config['Viber bot']['webhook'])
 
-scheduler = sched.scheduler(time.time, time.sleep)
-scheduler.enter(5, 1, set_webhook, (viber, ))
-thread = threading.Thread(target=scheduler.run)
-thread.start()
+if __name__ == '__main__':
 
-# Start Flask server.
-app.run(host=config['Flask']['listen address'],
-        port=int(config['Flask']['listen port']),
-        debug=True, ssl_context=(config['Flask']['certificate'],
-                                 config['Flask']['private key']))
+    # Set webhook after the server has started.
+    def set_webhook():
+        viber.set_webhook(config['Viber bot']['webhook'])
+
+    scheduler = sched.scheduler(time.time, time.sleep)
+    scheduler.enter(5, 1, set_webhook)
+    thread = threading.Thread(target=scheduler.run)
+    thread.start()
+
+    # Start Flask server.
+    app.run(host=config['Flask']['listen address'],
+            port=int(config['Flask']['listen port']),
+            debug=True, ssl_context=(config['Flask']['certificate'],
+                                     config['Flask']['private key']))
