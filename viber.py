@@ -11,7 +11,7 @@ class ConfigError(Exception):
 def parse_config(config_file):
     config = configparser.ConfigParser()
     config.read(config_file)
-*
+
     # Configuration parameters for Viber.
     if 'Viber' not in config:
         raise ConfigError('ERROR: Configuration block "Viber" is '
