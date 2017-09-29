@@ -2,6 +2,21 @@ import configparser
 import sys
 from viberbot import Api
 from viberbot.api.bot_configuration import BotConfiguration
+from viberbot.api.messages.text_message import TextMessage
+
+
+MAX_TEXT_MESSAGE_SIZE = 7 * 1000  # 7K
+
+
+def create_text_messages(long_text):
+    """
+    Split long text into a list of max size text messages.
+    """
+    messages = list()
+    for text in [long_text[i:i + MAX_TEXT_MESSAGE_SIZE] for i in range(
+            0, len(long_text), MAX_TEXT_MESSAGE_SIZE)]:
+        messages.append(TextMessage(text=text))
+    return messages
 
 
 class ConfigError(Exception):

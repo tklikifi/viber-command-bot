@@ -7,7 +7,7 @@ import sched
 import subprocess
 import threading
 import time
-from viber import commands, viber_config, viber
+from viber import commands, create_text_messages, viber_config, viber
 from flask import Flask, request, Response
 from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
@@ -72,7 +72,7 @@ def check_user_id(user_id, name='<unknown>'):
         text = 'Message from untrusted user id: {} ({})'.format(user_id, name)
         logger.warning(text)
         viber.send_messages(viber_config['notify user id'],
-                            [TextMessage(text=text)])
+                            create_text_messages(text))
         return False
     logger.info('Message from trusted user id: {} ({})'.format(user_id, name))
     return True
@@ -120,11 +120,10 @@ def show_command_help():
 
 def command_thread_target(command, output_format, user_id):
     text, media = execute_local_command(command, output_format)
+    messages = create_text_messages(text)
     if media:
-        viber.send_messages(user_id, [TextMessage(text=text),
-                                      URLMessage(media=media)])
-    else:
-        viber.send_messages(user_id, [TextMessage(text=text)])
+        messages.append(URLMessage(media=media))
+    viber.send_messages(user_id, messages)
 
 
 def execute_local_command(command, output_format=None):
