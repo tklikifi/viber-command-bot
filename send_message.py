@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from viber import create_text_messages, viber_config, viber
+from viber import config, create_text_messages, viber
 from viberbot.api.messages import URLMessage
 
 
@@ -11,7 +11,7 @@ def parse_command_line_arguments():
     parser.add_argument('--user-id', help='user id')
     parser.add_argument('--media-url', help='media URL')
     parser.add_argument('message', help='message text')
-    parser.set_defaults(user_id=viber_config['notify user id'])
+    parser.set_defaults(user_id=config['Viber']['notify user id'])
     return parser.parse_args()
 
 

@@ -7,7 +7,7 @@ import sched
 import subprocess
 import threading
 import time
-from viber import commands, create_text_messages, viber_config, viber
+from viber import config, create_text_messages, viber
 from flask import Flask, request, Response
 from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
@@ -17,14 +17,6 @@ from viberbot.api.viber_requests import ViberMessageRequest
 from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
-# Set logger.
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - '
-                              '%(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 app = Flask(__name__)
 
@@ -68,10 +60,10 @@ def incoming():
 
 
 def check_user_id(user_id, name='<unknown>'):
-    if user_id not in viber_config['trusted user ids']:
+    if user_id not in config['Viber']['trusted user ids']:
         text = 'Message from untrusted user id: {} ({})'.format(user_id, name)
         logger.warning(text)
-        viber.send_messages(viber_config['notify user id'],
+        viber.send_messages(config['Viber']['notify user id'],
                             create_text_messages(text))
         return False
     logger.info('Message from trusted user id: {} ({})'.format(user_id, name))
@@ -92,7 +84,7 @@ def execute_command(viber_request, command):
     if command == 'help':
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text=show_command_help())])
-    elif command not in commands:
+    elif command not in bot_commands:
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not '
                                               'supported.'.format(command))])
@@ -100,15 +92,15 @@ def execute_command(viber_request, command):
         # Execute local command in another thread.
         command_thread = threading.Thread(
             target=command_thread_target,
-            args=(commands[command]['execute'],
-                  commands[command]['output format'],
+            args=(bot_commands[command]['execute'],
+                  bot_commands[command]['output format'],
                   viber_request.sender.id,))
         command_thread.start()
 
 
 def show_command_help():
     text = 'Available commands:\n\n'
-    for k, v in commands.items():
+    for k, v in bot_commands.items():
         text += '/' + k + ' -- '
         if v.get('help') is not None:
             text += v.get('help')
@@ -141,14 +133,38 @@ def execute_local_command(command, output_format=None):
     return output.decode().strip(), None
 
 
-webhook = viber_config['webhook']
+def create_bot_commands():
+    commands = dict()
+    prefix = 'Command '
+    sections = [s for s in config.sections() if s.startswith(prefix)]
+    for section in sections:
+        name = section[len(prefix):].strip()
+        commands[name] = dict()
+        for key in ['execute', 'output format', 'help']:
+            if key in config[section]:
+                commands[name][key] = config[section][key]
+            else:
+                commands[name][key] = None
+    return commands
 
 
 def set_webhook():
     viber.set_webhook(webhook)
 
 
+bot_commands = create_bot_commands()
+
+# Set logger.
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - '
+                              '%(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 # Set webhook after the server has started.
+webhook = config['Viber']['webhook']
 webhook_scheduler = sched.scheduler(time.time, time.sleep)
 webhook_scheduler.enter(5, 1, set_webhook)
 webhook_thread = threading.Thread(target=webhook_scheduler.run)
