@@ -17,6 +17,7 @@ pip
 pyOpenSSL
 pycparser
 python-daemon-3K
+redis
 requests
 setuptools
 six
