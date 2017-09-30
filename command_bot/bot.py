@@ -7,8 +7,9 @@ import sched
 import subprocess
 import threading
 import time
-from viber import config, create_text_messages, viber
 from flask import Flask, request, Response
+from logging.handlers import SysLogHandler
+from viber import config, create_text_messages, viber
 from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
 from viberbot.api.viber_requests import ViberConversationStartedRequest
@@ -39,13 +40,12 @@ def incoming():
                                 viber_request.user.name,
                                 show_command_help()))])
     elif isinstance(viber_request, ViberMessageRequest):
-        if not check_user_id(viber_request.sender.id,
-                             name=viber_request.sender.name):
+        if not check_user_id(viber_request):
             return Response(status=403)
         handle_viber_request(viber_request)
     elif isinstance(viber_request, ViberSubscribedRequest):
         logger.info('User subscribed: {} ({})'.format(
-            viber_request.user.id, viber_request.user.name))
+            viber_request.user.name, viber_request.user.id))
         viber.send_messages(viber_request.user.id,
                             [TextMessage(text='Hello, {}!\n\n{}'.format(
                                 viber_request.user.name,
@@ -59,14 +59,18 @@ def incoming():
     return Response(status=200)
 
 
-def check_user_id(user_id, name='<unknown>'):
-    if user_id not in config['Viber']['trusted user ids']:
-        text = 'Message from untrusted user id: {} ({})'.format(user_id, name)
+def check_user_id(viber_request):
+    if viber_request.sender.id not in config['Viber']['trusted user ids']:
+        text = 'Message from untrusted user {} ({}): {}'.format(
+            viber_request.sender.name, viber_request.sender.id,
+            viber_request.message.text)
         logger.warning(text)
         viber.send_messages(config['Viber']['notify user id'],
                             create_text_messages(text))
         return False
-    logger.info('Message from trusted user id: {} ({})'.format(user_id, name))
+    logger.info('Message from trusted user {} ({}): {}'.format(
+        viber_request.sender.name, viber_request.sender.id,
+        viber_request.message.text))
     return True
 
 
@@ -81,10 +85,14 @@ def handle_viber_request(viber_request):
 
 
 def execute_command(viber_request, command):
+    logger.info('Command from user {}: {}'.format(
+        viber_request.sender.name, command))
     if command == 'help':
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text=show_command_help())])
     elif command not in bot_commands:
+        logger.warning('Un-supported command from {}: {}'.format(
+            viber_request.sender.name, command))
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not '
                                               'supported.'.format(command))])
@@ -154,12 +162,11 @@ def set_webhook():
 
 bot_commands = create_bot_commands()
 
-# Set logger.
+# Set loggers.
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - '
-                              '%(levelname)s - %(message)s')
+handler = logging.handlers.SysLogHandler(address = '/dev/log')
+formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -188,6 +195,11 @@ if __name__ == '__main__':
 
     # Start Flask development server.
     args = parse_command_line_arguments()
+    debug_handler = logging.StreamHandler()
+    debug_formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
+                                        '%(name)s: %(message)s')
+    debug_handler.setFormatter(debug_formatter)
+    logger.addHandler(debug_handler)
     logger.setLevel(args.log_level.upper())
     if args.webhook:
         webhook = args.webhook
