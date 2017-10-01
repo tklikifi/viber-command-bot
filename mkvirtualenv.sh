@@ -5,23 +5,30 @@ if [ "$DIR" = "." ]; then
     DIR="$(pwd)"
 fi
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 virtual_env_dir"
-    exit 1
+VIRTUALENVROOT="${1:-.virtualenvroot}"
+VIBER_VIRTUALENV="$VIRTUALENVROOT/viber"
+mkdir -p "$VIRTUALENVROOT"
+virtualenv --no-site-packages "$VIBER_VIRTUALENV"
+cat <<EOF > "$DIR/.virtualenvrc"
+#
+# Viber environment variables.
+#
+export VIBER_DIR="$DIR"
+export VIBER_VIRTUALENV="$VIBER_VIRTUALENV"
+source "$VIBER_VIRTUALENV/bin/activate"
+export PYTHONPATH="$DIR"
+if [ -z "$VIBER_CONF" ]; then
+    export VIBER_CONF=/etc/viber/bot-command.conf
 fi
+EOF
 
-VENV="$1"
-mkdir -p "$VENV"
-virtualenv --no-site-packages "$VENV/viber"
-echo "export VIBER_DIR=\"$DIR\"" > .venv
-echo "export VIBER_VENV=\"$VENV/viber\"" >> .venv
-echo "source \"$VENV/viber/bin/activate\"" >> .venv
-echo "export PYTHONPATH=\"$VIBER_DIR\"" >> .venv
-source "$DIR/.venv"
+source "$DIR/.virtualenvrc"
 pip install -r "$DIR/requirements.txt"
+
+ln -s "$VIBER_VIRTUALENV" "$DIR/.virtualenv"
 
 echo ""
 echo "Viber Bot virtualenv created:"
 echo ""
-echo "source \"$DIR/.venv\""
+echo "source \"$DIR/.virtualenvrc\""
 echo ""

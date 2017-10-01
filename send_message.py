@@ -23,7 +23,10 @@ def main():
     if args.media_url:
         messages.append(URLMessage(media=args.media_url))
     if messages:
-        viber.send_messages(args.user_id, messages)
+        try:
+            viber.send_messages(args.user_id, messages)
+        except Exception as e:
+            print('ERROR: Failed to send message: {}'.format(e))
     return 0
 
 

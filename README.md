@@ -8,9 +8,9 @@ These tools use Viber Python Bot API
 messages.
 
 
-## Viber command bot
+## Viber bot command
 
-**command_bot** is a simple Viber bot that receives commands from a trusted
+**bot/command** is a simple Viber bot that receives commands from a trusted
 Viber user. Bot executes the configured command and returns the answer.
 
 ### Install
@@ -21,8 +21,8 @@ Viber user. Bot executes the configured command and returns the answer.
     ...
     
     location = /viber/bot/command { rewrite ^ /viber/bot/command/; }   
-    location /viber/bot/command { try_files $uri @viberbotcommand; }  
-    location @viberbotcommand { 
+    location /viber/bot/command { try_files $uri @viber-bot-command; }  
+    location @viber-bot-command { 
         include uwsgi_params;                          
         uwsgi_pass unix:/var/run/viber/bot-command.sock;       
     }                   
@@ -32,13 +32,17 @@ Viber user. Bot executes the configured command and returns the answer.
 
 #### Systemd
 
-    # cp systemd.service /usr/lib/systemd/system/viber-command-bot.service
-    # systemctl enable viber-command-bot.service
-    # systemctl start viber-command-bot.service
-    # /usr/local/viber/command_bot/bot.sh --register
+    # cp systemd.service /usr/lib/systemd/system/viber-bot-command.service
+    # systemctl enable viber-bot-command.service
+    # systemctl start viber-bot-command.service
+    # /usr/local/viber/viber-bot-command --register
 
 ## Send viber message
 
 **send_message.py** is a small Python script that can be used for sending
 messages to a trusted Viber user that has subscribed to public Viber bot
-account.
+account. **send-message** is a shell script, which sets up the environment
+and sends the message, e.g.:
+
+    $ ./send-message 'Hello there!'
+    $ ./send-message --user-id xxyyzz 'Hello there!'

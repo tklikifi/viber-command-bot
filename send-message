@@ -2,11 +2,11 @@
 
 DIR="$(dirname $0)"
 
-if [ ! -f "$DIR/.venv" ]; then
+if [ ! -f "$DIR/.virtualenvrc" ]; then
     echo "ERROR: Virtual environment has not been created."
     exit 1
 fi
 
-source "$DIR/.venv"
+source "$DIR/.virtualenvrc"
 
 "$DIR/send_message.py" $*
