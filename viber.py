@@ -36,7 +36,7 @@ def parse_bot_config(config_file):
     if 'Viber' not in bot_config:
         raise ConfigError('ERROR: Configuration block "Viber" is missing')
     for k in ['authentication_token', 'name', 'avatar', 'webhook',
-              'notify_user_id', 'trusted_user_ids']:
+              'notify_user_id', 'trusted_user_ids',]:
         if k not in bot_config['Viber']:
             raise ConfigError('ERROR: Viber "{}" is not configured'.format(k))
 
@@ -45,7 +45,7 @@ def parse_bot_config(config_file):
 
 try:
     config = parse_bot_config(
-        os.getenv('VIBER_BOT_CONF', '/etc/viber-bot.conf'))
+        os.getenv('VIBER_BOT_CONF', '/etc/viber-command-bot.conf'))
 except ConfigError as e:
     print(str(e))
     sys.exit(1)

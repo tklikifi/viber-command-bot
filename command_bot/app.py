@@ -3,10 +3,9 @@
 import argparse
 import json
 import logging
-import sched
 import subprocess
+import sys
 import threading
-import time
 from flask import Flask, request, Response
 from logging.handlers import SysLogHandler
 from viber import config, create_text_messages, viber
@@ -156,10 +155,6 @@ def create_bot_commands():
     return commands
 
 
-def set_webhook():
-    viber.set_webhook(webhook)
-
-
 bot_commands = create_bot_commands()
 
 logger = logging.getLogger()
@@ -168,16 +163,6 @@ handler = logging.handlers.SysLogHandler(address = '/dev/log')
 formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-# Viber bot API needs to register webhook where the service connects when
-# there are messages for the bot. Since we need to have the bot server running
-# before the webhook can be used we have to register webhook after the server
-# has started. Set webhook in another thread after 5 seconds.
-webhook = config['Viber']['webhook']
-webhook_scheduler = sched.scheduler(time.time, time.sleep)
-webhook_scheduler.enter(5, 1, set_webhook)
-webhook_thread = threading.Thread(target=webhook_scheduler.run)
-webhook_thread.start()
 
 
 def parse_command_line_arguments():
@@ -189,20 +174,37 @@ def parse_command_line_arguments():
     parser.add_argument('--tls-private-key', help='TLS private key file')
     parser.add_argument('--tls-certificate', help='TLS certificate file')
     parser.add_argument('--webhook', help='webhook for viber')
+    parser.add_argument('--register', action='store_true', help='register bot')
+    parser.add_argument('--un-register', action='store_true',
+                        help='un-register bot')
     parser.set_defaults(log_level='INFO', webhook=config['Viber']['webhook'])
     return parser.parse_args()
 
 
 if __name__ == '__main__':
 
-    # Start Flask development server.
     args = parse_command_line_arguments()
+    if args.register:
+        try:
+            viber.set_webhook(args.webhook)
+        except Exception as e:
+            print('ERROR: Failed to register bot: {}'.format(e))
+            sys.exit(1)
+        sys.exit(0)
+    if args.un_register:
+        try:
+            viber.unset_webhook()
+        except Exception as e:
+            print('ERROR: Failed to un-register bot: {}'.format(e))
+            sys.exit(1)
+        sys.exit(0)
+
+    # Start Flask development server.
     development_handler = logging.StreamHandler()
     development_formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
                                               '%(name)s: %(message)s')
     development_handler.setFormatter(development_formatter)
     logger.addHandler(development_handler)
     logger.setLevel(args.log_level.upper())
-    webhook = args.webhook
     app.run(host=args.listen_address, port=args.listen_port, debug=args.debug,
             ssl_context=(args.tls_certificate, args.tls_private_key))
