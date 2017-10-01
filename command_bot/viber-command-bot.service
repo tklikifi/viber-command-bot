@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance for Viber command bot
+After=network.target
+
+[Service]
+User=viber
+Group=nginx
+WorkingDirectory=/usr/local/viber
+Environment="PATH=/usr/local/viber/bin"
+ExecStart=/usr/local/viber/bin/uwsgi --ini command_bot/bot.ini
+
+[Install]
+WantedBy=multi-user.target
