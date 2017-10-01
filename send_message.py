@@ -11,7 +11,7 @@ def parse_command_line_arguments():
     parser.add_argument('--user-id', help='user id')
     parser.add_argument('--media-url', help='media URL')
     parser.add_argument('message', help='message text')
-    parser.set_defaults(user_id=config['Viber']['notify user id'])
+    parser.set_defaults(user_id=config['Viber']['notify_user_id'])
     return parser.parse_args()
 
 

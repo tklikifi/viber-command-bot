@@ -1,4 +1,5 @@
 import configparser
+import os
 import sys
 from viberbot import Api
 from viberbot.api.bot_configuration import BotConfiguration
@@ -25,39 +26,30 @@ class ConfigError(Exception):
 
 def parse_bot_config(config_file):
     bot_config = configparser.ConfigParser()
+    if not os.path.exists(config_file):
+        raise ConfigError('ERROR: Configuration file not found: {}'.format(
+            config_file))
     bot_config.read(config_file)
 
-    # Configuration parameters for Viber.
     if 'Viber' not in bot_config:
-        raise ConfigError('ERROR: Configuration block "Viber" is '
-                          'missing')
-    if 'authentication token' not in bot_config['Viber']:
-        raise ConfigError('ERROR: Viber "authentication token" is not '
-                          'configured')
-    if 'name' not in bot_config['Viber']:
-        raise ConfigError('ERROR: Viber "name" is not configured')
-    if 'avatar' not in bot_config['Viber']:
-        bot_config['Viber']['avatar'] = None
-    if 'webhook' not in bot_config['Viber']:
-        raise ConfigError('ERROR: Viber "webhook" is not configured')
-    if 'notify user id' not in bot_config['Viber']:
-        raise ConfigError('ERROR: Viber "notify user id" is not '
-                          'configured')
-    if 'trusted user ids' not in bot_config['Viber']:
-        raise ConfigError('ERROR: Viber "trusted user ids" is not '
-                          'configured')
+        raise ConfigError('ERROR: Configuration block "Viber" is missing')
+    for k in ['authentication_token', 'name', 'avatar', 'webhook',
+              'notify_user_id', 'trusted_user_ids']:
+        if k not in bot_config['Viber']:
+            raise ConfigError('ERROR: Viber "{}" is not configured'.format(k))
 
     return bot_config
 
 
 # Parse Viber configuration.
 try:
-    config = parse_bot_config('/etc/nginx/viber-bot.ini')
+    config = parse_bot_config(
+        os.getenv('VIBER_BOT_CONF', '/etc/viber-bot.conf'))
 except ConfigError as e:
     print(str(e))
     sys.exit(1)
 
 # Configure Viber bot API.
 viber = Api(BotConfiguration(
-    auth_token=config['Viber']['authentication token'],
+    auth_token=config['Viber']['authentication_token'],
     name=config['Viber']['name'], avatar=config['Viber']['avatar']))

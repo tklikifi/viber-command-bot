@@ -60,12 +60,12 @@ def incoming():
 
 
 def check_user_id(viber_request):
-    if viber_request.sender.id not in config['Viber']['trusted user ids']:
+    if viber_request.sender.id not in config['Viber']['trusted_user_ids']:
         text = 'Message from untrusted user {} ({}): {}'.format(
             viber_request.sender.name, viber_request.sender.id,
             viber_request.message.text)
         logger.warning(text)
-        viber.send_messages(config['Viber']['notify user id'],
+        viber.send_messages(config['Viber']['notify_user_id'],
                             create_text_messages(text))
         return False
     logger.info('Message from trusted user {} ({}): {}'.format(
@@ -96,12 +96,18 @@ def execute_command(viber_request, command):
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not '
                                               'supported.'.format(command))])
+    elif 'execute' not in bot_commands[command]:
+        logger.warning('Execute parameter not configured for command: '
+                       '{}'.format(command))
+        viber.send_messages(viber_request.sender.id,
+                            [TextMessage(text='Command "{}" is not properly '
+                                              'configured.'.format(command))])
     else:
         # Execute local command in another thread.
         command_thread = threading.Thread(
             target=command_thread_target,
-            args=(bot_commands[command]['execute'],
-                  bot_commands[command]['output format'],
+            args=(bot_commands[command].get('execute'),
+                  bot_commands[command].get('output_format'),
                   viber_request.sender.id,))
         command_thread.start()
 
@@ -144,15 +150,8 @@ def execute_local_command(command, output_format=None):
 def create_bot_commands():
     commands = dict()
     prefix = 'Command '
-    sections = [s for s in config.sections() if s.startswith(prefix)]
-    for section in sections:
-        name = section[len(prefix):].strip()
-        commands[name] = dict()
-        for key in ['execute', 'output format', 'help']:
-            if key in config[section]:
-                commands[name][key] = config[section][key]
-            else:
-                commands[name][key] = None
+    for section in [s for s in config.sections() if s.startswith(prefix)]:
+        commands[section[len(prefix):].strip()] = dict(config[section])
     return commands
 
 
