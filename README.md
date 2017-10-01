@@ -20,11 +20,11 @@ Viber user. Bot executes the configured command and returns the answer.
 
     ...
     
-    location = /viber-bot { rewrite ^ /viber-bot/; }   
-    location /viber-bot { try_files $uri @viberbot; }  
-    location @viberbot { 
+    location = /viber/bot/command { rewrite ^ /viber/bot/command/; }   
+    location /viber/bot/command { try_files $uri @viberbotcommand; }  
+    location @viberbotcommand { 
         include uwsgi_params;                          
-        uwsgi_pass unix:/var/run/viber/bot.sock;       
+        uwsgi_pass unix:/var/run/viber/bot-command.sock;       
     }                   
     
     ...
@@ -32,7 +32,7 @@ Viber user. Bot executes the configured command and returns the answer.
 
 #### Systemd
 
-    # cp viber-command-bot.service /usr/lib/systemd/system
+    # cp systemd.service /usr/lib/systemd/system/viber-command-bot.service
     # systemctl enable viber-command-bot.service
     # systemctl start viber-command-bot.service
     # /usr/local/viber/command_bot/bot.sh --register

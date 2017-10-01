@@ -186,16 +186,21 @@ if __name__ == '__main__':
     args = parse_command_line_arguments()
     if args.register:
         try:
+            print('Registering webhook "{}" ... '.format(args.webhook),
+                  end='', flush=True)
             viber.set_webhook(args.webhook)
+            print('OK.')
         except Exception as e:
-            print('ERROR: Failed to register bot: {}'.format(e))
+            print('\nERROR: Failed to register bot: {}'.format(e))
             sys.exit(1)
         sys.exit(0)
     if args.un_register:
         try:
+            print('Un-registering webhook ... ', end='', flush=True)
             viber.unset_webhook()
+            print('OK.')
         except Exception as e:
-            print('ERROR: Failed to un-register bot: {}'.format(e))
+            print('\nERROR: Failed to un-register bot: {}'.format(e))
             sys.exit(1)
         sys.exit(0)
 

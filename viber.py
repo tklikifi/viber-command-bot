@@ -44,8 +44,7 @@ def parse_bot_config(config_file):
 
 
 try:
-    config = parse_bot_config(
-        os.getenv('VIBER_BOT_CONF', '/etc/viber-command-bot.conf'))
+    config = parse_bot_config(os.getenv('VIBER_CONF'))
 except ConfigError as e:
     print(str(e))
     sys.exit(1)
