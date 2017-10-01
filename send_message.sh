@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
-if [ ! -f ".venv" ]; then
+DIR="$(dirname $0)"
+
+if [ ! -f "$DIR/.venv" ]; then
     echo "ERROR: Virtual environment has not been created."
     exit 1
 fi
 
-source .venv
+source "$DIR/.venv"
 
-./send_message.py $*
+"$DIR/send_message.py" $*

@@ -144,7 +144,7 @@ def execute_local_command(command, output_format=None):
             command, output.decode().strip()), None
     if output_format == 'json':
         message = json.loads(output.decode().strip())
-        return message.get('message'), message.get('media')
+        return message.get('text'), message.get('media')
     return output.decode().strip(), None
 
 
