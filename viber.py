@@ -41,7 +41,6 @@ def parse_bot_config(config_file):
     return bot_config
 
 
-# Parse Viber configuration.
 try:
     config = parse_bot_config(
         os.getenv('VIBER_BOT_CONF', '/etc/viber-bot.conf'))
@@ -49,7 +48,6 @@ except ConfigError as e:
     print(str(e))
     sys.exit(1)
 
-# Configure Viber bot API.
 viber = Api(BotConfiguration(
     auth_token=config['Viber']['authentication_token'],
     name=config['Viber']['name'], avatar=config['Viber']['avatar']))

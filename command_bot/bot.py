@@ -77,7 +77,6 @@ def check_user_id(viber_request):
 def handle_viber_request(viber_request):
     message = viber_request.message
     if message.text.startswith('/'):
-        # We received a command.
         execute_command(viber_request, message.text[1:])
     else:
         text = 'You did not send a command.'
@@ -103,7 +102,9 @@ def execute_command(viber_request, command):
                             [TextMessage(text='Command "{}" is not properly '
                                               'configured.'.format(command))])
     else:
-        # Execute local command in another thread.
+        # Viber bot API expects responses to be quick. The local command
+        # might take longer that allowed, so execute them in another thread.
+        # The answer is sent when the command is ready.
         command_thread = threading.Thread(
             target=command_thread_target,
             args=(bot_commands[command].get('execute'),
@@ -133,7 +134,7 @@ def command_thread_target(command, output_format, user_id):
 
 
 def execute_local_command(command, output_format=None):
-    logger.debug('Running command: "{}"'.format(command))
+    logger.debug('Running command: {}'.format(command))
     p = subprocess.Popen(command, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
     output, error = p.communicate()
@@ -161,7 +162,6 @@ def set_webhook():
 
 bot_commands = create_bot_commands()
 
-# Set loggers.
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.handlers.SysLogHandler(address = '/dev/log')
@@ -169,7 +169,10 @@ formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-# Set webhook after the server has started.
+# Viber bot API needs to register webhook where the service connects when
+# there are messages for the bot. Since we need to have the bot server running
+# before the webhook can be used we have to register webhook after the server
+# has started. Set webhook in another thread after 5 seconds.
 webhook = config['Viber']['webhook']
 webhook_scheduler = sched.scheduler(time.time, time.sleep)
 webhook_scheduler.enter(5, 1, set_webhook)
@@ -186,7 +189,7 @@ def parse_command_line_arguments():
     parser.add_argument('--tls-private-key', help='TLS private key file')
     parser.add_argument('--tls-certificate', help='TLS certificate file')
     parser.add_argument('--webhook', help='webhook for viber')
-    parser.set_defaults(log_level='INFO')
+    parser.set_defaults(log_level='INFO', webhook=config['Viber']['webhook'])
     return parser.parse_args()
 
 
@@ -194,13 +197,12 @@ if __name__ == '__main__':
 
     # Start Flask development server.
     args = parse_command_line_arguments()
-    debug_handler = logging.StreamHandler()
-    debug_formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
-                                        '%(name)s: %(message)s')
-    debug_handler.setFormatter(debug_formatter)
-    logger.addHandler(debug_handler)
+    development_handler = logging.StreamHandler()
+    development_formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
+                                              '%(name)s: %(message)s')
+    development_handler.setFormatter(development_formatter)
+    logger.addHandler(development_handler)
     logger.setLevel(args.log_level.upper())
-    if args.webhook:
-        webhook = args.webhook
+    webhook = args.webhook
     app.run(host=args.listen_address, port=args.listen_port, debug=args.debug,
             ssl_context=(args.tls_certificate, args.tls_private_key))
