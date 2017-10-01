@@ -14,6 +14,8 @@ def create_text_messages(long_text):
     Split long text into a list of max size text messages.
     """
     messages = list()
+    if not long_text:
+        return messages
     for text in [long_text[i:i + MAX_TEXT_MESSAGE_SIZE] for i in range(
             0, len(long_text), MAX_TEXT_MESSAGE_SIZE)]:
         messages.append(TextMessage(text=text))
