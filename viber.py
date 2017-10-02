@@ -27,6 +27,8 @@ class ConfigError(Exception):
 
 
 def parse_bot_config(config_file):
+    if not config_file:
+        raise ConfigError('ERROR: Configuration file not specified')
     bot_config = configparser.ConfigParser()
     if not os.path.exists(config_file):
         raise ConfigError('ERROR: Configuration file not found: {}'.format(

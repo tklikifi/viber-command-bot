@@ -8,7 +8,7 @@ Group=nginx
 WorkingDirectory=/usr/local/viber
 Environment="PATH=/usr/local/bin:/usr/bin:/bin:"
 Environment="VIBER_CONF=/etc/viber/bot-command.conf"
-ExecStart=/usr/local/viber/.virtualenv/bin/uwsgi --ini bot/command/uwsgi.ini
+ExecStart=/usr/local/viber/.virtualenv/bin/uwsgi --ini bots/command/uwsgi.ini
 
 [Install]
 WantedBy=multi-user.target

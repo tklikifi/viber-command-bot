@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DIR="$(dirname $0)/.."
 
@@ -9,4 +9,4 @@ fi
 
 source "$DIR/.virtualenvrc"
 
-python "$DIR/bot/command/bot.py" $*
+"$DIR/utils/send_message.py" $*

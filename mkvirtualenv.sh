@@ -17,7 +17,7 @@ export VIBER_DIR="$DIR"
 export VIBER_VIRTUALENV="$VIBER_VIRTUALENV"
 source "$VIBER_VIRTUALENV/bin/activate"
 export PYTHONPATH="$DIR"
-if [ -z "$VIBER_CONF" ]; then
+if [ -z "\$VIBER_CONF" ]; then
     export VIBER_CONF=/etc/viber/bot-command.conf
 fi
 EOF
