@@ -6,9 +6,9 @@ import logging
 import subprocess
 import sys
 import threading
-from flask import Flask, request, Response
 from logging.handlers import SysLogHandler
-from viber import config, create_text_messages, viber
+
+from flask import Flask, request, Response
 from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
 from viberbot.api.viber_requests import ViberConversationStartedRequest
@@ -17,6 +17,8 @@ from viberbot.api.viber_requests import ViberMessageRequest
 from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
+from common.messages import create_text_message_list
+from common.viber import config, viber
 
 app = Flask(__name__)
 
@@ -65,7 +67,7 @@ def check_user_id(viber_request):
             viber_request.message.text)
         logger.warning(text)
         viber.send_messages(config['Viber']['notify_user_id'],
-                            create_text_messages(text))
+                            create_text_message_list(text))
         return False
     logger.info('Message from trusted user {} ({}): {}'.format(
         viber_request.sender.name, viber_request.sender.id,
@@ -126,7 +128,7 @@ def show_command_help():
 
 def command_thread_target(command, output_format, user_id):
     text, media = execute_local_command(command, output_format)
-    messages = create_text_messages(text)
+    messages = create_text_message_list(text)
     if media:
         messages.append(URLMessage(media=media))
     viber.send_messages(user_id, messages)

@@ -2,8 +2,11 @@
 
 import argparse
 import sys
-from viber import config, create_text_messages, viber
+
 from viberbot.api.messages import URLMessage
+
+from common.messages import create_text_message_list
+from common.viber import config, viber
 
 
 def parse_command_line_arguments():
@@ -19,7 +22,7 @@ def main():
     args = parse_command_line_arguments()
     messages = list()
     if args.message:
-        messages = create_text_messages(args.message)
+        messages = create_text_message_list(args.message)
     if args.media_url:
         messages.append(URLMessage(media=args.media_url))
     if messages:
