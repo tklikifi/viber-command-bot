@@ -8,7 +8,7 @@ from viberbot.api.bot_configuration import BotConfiguration
 try:
     config = common.config.parse(os.getenv('VIBER_CONF'))
 except common.config.ParseError as e:
-    print(str(e))
+    print(e)
     sys.exit(1)
 
 viber = Api(BotConfiguration(
