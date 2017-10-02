@@ -7,7 +7,7 @@ NUMBER_OF_TEXT_MESSAGES = 20
 
 def create_text_message_list(text):
     """
-    Split text into a list of text messages. Also, lLimit the number of the
+    Split text into a list of text messages. Also, limit the number of the
     text messages.
     """
     messages = list()
