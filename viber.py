@@ -6,19 +6,24 @@ from viberbot.api.bot_configuration import BotConfiguration
 from viberbot.api.messages.text_message import TextMessage
 
 
-MAX_TEXT_MESSAGE_SIZE = 7 * 1000  # 7K
+MAX_TEXT_MESSAGE_SIZE = 7 * 1000  # 7K limit in Viber API
+NUMBER_OF_TEXT_MESSAGES = 20
 
 
-def create_text_messages(long_text):
+def create_text_messages(text):
     """
-    Split long text into a list of max size text messages.
+    Split text into a list of text messages. Also, lLimit the number of the
+    text messages.
     """
     messages = list()
-    if not long_text:
+    if not text:
         return messages
-    for text in [long_text[i:i + MAX_TEXT_MESSAGE_SIZE] for i in range(
-            0, len(long_text), MAX_TEXT_MESSAGE_SIZE)]:
-        messages.append(TextMessage(text=text))
+    truncated_text = text[:(NUMBER_OF_TEXT_MESSAGES * MAX_TEXT_MESSAGE_SIZE)]
+    for chunk in [truncated_text[i:i + MAX_TEXT_MESSAGE_SIZE] for i in range(
+            0, len(truncated_text), MAX_TEXT_MESSAGE_SIZE)]:
+        messages.append(TextMessage(text=chunk))
+    if truncated_text != text:
+        messages.append(TextMessage(text='<truncated>'))
     return messages
 
 
