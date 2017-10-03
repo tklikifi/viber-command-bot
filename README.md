@@ -23,11 +23,13 @@ Here are instructions for installing the bot for NGINX in CentOS 7.
     $ sudo useradd viber -s /usr/sbin/nologin
     $ sudo mkdir /etc/viber
     $ sudo chown viber:viber /etc/viber 
-    $ sudo chmod 700 /etc/viber 
+    $ sudo chmod 710 /etc/viber 
     $ sudo cp config/bot.conf /etc/viber/bot.conf
     $ sudo chown viber:viber /etc/viber/bot.conf
+    £ sudo chmod 640 /etc/viber/bot.conf
     $ sudo cp config/uwsgi.ini /etc/viber/uwsgi.ini
     $ sudo chown viber:viber /etc/viber/uwsgi.ini
+    $ sudo pip3.6 install setuptools
     $ python3.6 ./setup.py build
     $ sudo python3.6 ./setup.py install
 
@@ -58,14 +60,19 @@ Add the following lines to */etc/nginx/nginx.conf*:
     $ sudo cp config/systemd.service /usr/lib/systemd/system/viber-command-bot.service
     $ sudo systemctl enable viber-command-bot.service
     $ sudo systemctl start viber-command-bot.service
-    $ viber-command-bot-register
+    $ sudo viber-command-bot-register
 
 ## Send Viber message
 
-A small Python script **viber-send-message** can be used for sending
-messages to a trusted Viber user that has subscribed to public Viber bot
-account, e.g.:
+A small Python script **viber-send-message** can be used for sending messages to
+Viber users that have subscribed to public Viber bot account, e.g.:
 
     $ viber-send-message 'Hello there!'
     $ viber-send-message --user-id xxyyzz 'Hello there!'
     $ viber-send-message --media http://example.com/image.jpg 'Here is my image!'
+
+If no *user-id* is given, the Viber bot *notify_user_id* is used.
+
+User account that wants to send Viber messages must belong to **viber** group:
+
+    $ sudo usermod -a -G viber user
