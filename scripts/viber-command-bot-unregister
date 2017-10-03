@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from vibercommandbot.viber import config, viber
+from viber_command_bot.viber import config, viber
 
 try:
     print('Un-registering webhook "{}" ... '.format(config['Viber']['webhook']),

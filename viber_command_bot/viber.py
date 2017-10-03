@@ -2,7 +2,7 @@ import os
 import sys
 from viberbot import Api
 from viberbot.api.bot_configuration import BotConfiguration
-from vibercommandbot.config import ParseError, parse
+from viber_command_bot.config import ParseError, parse
 
 
 VIBER_CONF = '/etc/viber/bot.conf'

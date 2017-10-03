@@ -5,8 +5,8 @@ import sys
 
 from viberbot.api.messages import URLMessage
 
-from vibercommandbot.messages import create_text_message_list
-from vibercommandbot.viber import config, viber
+from viber_command_bot.messages import create_text_message_list
+from viber_command_bot.viber import config, viber
 
 
 def parse_command_line_arguments():

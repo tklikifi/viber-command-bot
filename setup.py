@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-setup(name='vibercommandbot',
+setup(name='viber_command_bot',
       version='0.1.0',
       description='Python Viber Command Bot',
       author='Tommi Linnakangas',
@@ -12,7 +12,7 @@ setup(name='vibercommandbot',
                         'idna', 'itsdangerous', 'Jinja2', 'MarkupSafe',
                         'requests', 'urllib3', 'uWSGI', 'viberbot',
                         'Werkzeug', ],
-      packages=['vibercommandbot', 'vibercommandbot.flask',],
+      packages=['viber_command_bot', 'viber_command_bot.flask',],
       scripts=['scripts/viber-command-bot-register',
                'scripts/viber-command-bot-unregister',
                'scripts/viber-send-message'],
