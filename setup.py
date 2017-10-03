@@ -3,44 +3,70 @@
 import grp
 import os
 import pwd
+from distutils import log
 from setuptools import setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from subprocess import check_call
 
 
-class PostDevelopCommand(develop):
+class DevelopCommand(develop):
 
     def run(self):
         develop.run(self)
 
 
-class PostInstallCommand(install):
+class InstallCommand(install):
+
+    user_options = install.user_options + [
+        ('bot-user=', None,
+         'Specify the user that will own the configuration files.'),
+        ('bot-group=', None,
+         'Specify the group that will be set to the configuration files.'),
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.bot_user = 'viber'
+        self.bot_group = 'viber'
+
+    def finalize_options(self):
+        install.finalize_options(self)
 
     def run(self):
         install.run(self)
 
-        # Create viber user.
-        username = 'viber'
-
+        # Create bot user.
         try:
-            uid = pwd.getpwnam(username).pw_uid
+            uid = pwd.getpwnam(self.bot_user).pw_uid
         except KeyError:
+            log.info('creating user {}'.format(self.bot_user))
             try:
-                check_call('useradd {} -s /usr/sbin/nologin'.format(
-                    username).split())
+                check_call('useradd -M -s /usr/sbin/nologin {}'.format(
+                    self.bot_user).split())
             except Exception as e:
                 print('ERROR: {}'.format(e))
             try:
-                uid = pwd.getpwnam(username).pw_uid
+                uid = pwd.getpwnam(self.bot_user).pw_uid
             except KeyError:
                 uid = 0
+
+        # Create bot group.
         try:
-            gid = grp.getgrnam('viber').gr_gid
+            gid = grp.getgrnam(self.bot_group).gr_gid
         except KeyError:
-            gid = 0
+            log.info('creating group {}'.format(self.bot_group))
+            try:
+                check_call('groupadd {}'.format(self.bot_group).split())
+            except Exception as e:
+                print('ERROR: {}'.format(e))
+            try:
+                gid = grp.getgrnam(self.bot_group).gr_gid
+            except KeyError:
+                gid = 0
 
         # Set directory and file permissions.
+        log.info('setting viber command bot file permissions')
         os.chown('/etc/viber', uid, gid)
         os.chmod('/etc/viber', 0o750)
         os.chown('/etc/viber/viber-command-bot.conf', uid, gid)
@@ -67,6 +93,6 @@ setup(name='viber_command_bot',
                     'config/viber-command-bot.ini']),
                   ('/usr/lib/systemd/system',
                    ['config/viber-command-bot.service', ])],
-      cmdclass={'develop': PostDevelopCommand,
-                'install': PostInstallCommand, },
+      cmdclass={'develop': DevelopCommand,
+                'install': InstallCommand, },
       )
