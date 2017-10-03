@@ -121,6 +121,7 @@ def execute_command(viber_request, command):
 
 def show_command_help():
     text = 'Available commands:\n\n'
+    text += '/echo -- Echo the text sent to the bot (internal command).\n'
     for k, v in bot_commands.items():
         text += '/' + k + ' -- '
         if v.get('help') is not None:
@@ -128,7 +129,7 @@ def show_command_help():
         else:
             text += 'Help is not available for command "{}".'.format(k)
         text += '\n'
-    return text + '/echo -- Echo the text sent to the bot.\n'
+    return text
 
 
 def command_thread_target(command, output_format, user_id):
