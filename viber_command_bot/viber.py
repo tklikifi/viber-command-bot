@@ -5,7 +5,7 @@ from viberbot.api.bot_configuration import BotConfiguration
 from viber_command_bot.config import ParseError, parse
 
 
-VIBER_CONF = '/etc/viber/bot.conf'
+VIBER_CONF = '/etc/viber/viber.conf'
 
 try:
     config = parse(os.getenv('VIBER_CONF', VIBER_CONF))

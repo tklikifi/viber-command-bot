@@ -24,11 +24,10 @@ Here are instructions for installing the bot for NGINX in CentOS 7.
     $ sudo mkdir /etc/viber
     $ sudo chown viber:viber /etc/viber 
     $ sudo chmod 710 /etc/viber 
-    $ sudo cp config/bot.conf /etc/viber/bot.conf
-    $ sudo chown viber:viber /etc/viber/bot.conf
-    £ sudo chmod 640 /etc/viber/bot.conf
-    $ sudo cp config/uwsgi.ini /etc/viber/uwsgi.ini
-    $ sudo chown viber:viber /etc/viber/uwsgi.ini
+    $ sudo cp config/viber-command-bot.conf /etc/viber
+    $ sudo cp config/viber-command-bot.ini /etc/viber
+    $ sudo chown viber:viber /etc/viber/*
+    £ sudo chmod 640 /etc/viber/*
     $ sudo pip3.6 install setuptools
     $ python3.6 ./setup.py build
     $ sudo python3.6 ./setup.py install
@@ -36,7 +35,7 @@ Here are instructions for installing the bot for NGINX in CentOS 7.
 Edit bot config file to include authentication token etc. and the commands you
 want the bot to execute:
 
-    $ sudo vi /etc/viber/bot.conf
+    $ sudo vi /etc/viber/viber-command-bot.conf
 
 
 #### Nginx
@@ -49,7 +48,7 @@ Add the following lines to */etc/nginx/nginx.conf*:
     location /viber-command-bot { try_files $uri @viber-command-bot; }  
     location @viber-command-bot { 
         include uwsgi_params;                          
-        uwsgi_pass unix:/var/run/viber/command-bot.sock;       
+        uwsgi_pass unix:/var/run/viber/viber-command-bot.sock;       
     }                   
     
     ...
@@ -57,7 +56,7 @@ Add the following lines to */etc/nginx/nginx.conf*:
 
 #### Systemd
 
-    $ sudo cp config/systemd.service /usr/lib/systemd/system/viber-command-bot.service
+    $ sudo cp config/viber-command-bot.service /usr/lib/systemd/system
     $ sudo systemctl enable viber-command-bot.service
     $ sudo systemctl start viber-command-bot.service
     $ sudo viber-command-bot-register
