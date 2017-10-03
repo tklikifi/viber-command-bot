@@ -1,7 +1,7 @@
 from viberbot.api.messages.text_message import TextMessage
 
 
-MAX_TEXT_MESSAGE_SIZE = 7 * 1000  # 7K limit in Viber API
+MAX_TEXT_MESSAGE_SIZE = 7000  # Limit in Viber API
 NUMBER_OF_TEXT_MESSAGES = 20
 
 
