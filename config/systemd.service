@@ -6,7 +6,7 @@ After=network.target
 User=viber
 Group=nginx
 Environment="PATH=/usr/local/bin:/usr/bin:/bin:"
-Environment="VIBER_CONF=/etc/viber/bot-command.conf"
+Environment="VIBER_CONF=/etc/viber/bot.conf"
 ExecStart=/usr/local/bin/uwsgi --ini /etc/viber/uwsgi.ini
 
 [Install]
