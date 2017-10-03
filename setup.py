@@ -36,11 +36,11 @@ class InstallCommand(install):
     def run(self):
         install.run(self)
 
-        # Create bot user.
         try:
             uid = pwd.getpwnam(self.bot_user).pw_uid
         except KeyError:
-            log.info('creating user {}'.format(self.bot_user))
+            log.info('creating viber command bot user {}'.format(
+                self.bot_user))
             try:
                 check_call('useradd -M -s /usr/sbin/nologin {}'.format(
                     self.bot_user).split())
@@ -51,11 +51,11 @@ class InstallCommand(install):
             except KeyError:
                 uid = 0
 
-        # Create bot group.
         try:
             gid = grp.getgrnam(self.bot_group).gr_gid
         except KeyError:
-            log.info('creating group {}'.format(self.bot_group))
+            log.info('creating viber command bot group {}'.format(
+                self.bot_group))
             try:
                 check_call('groupadd {}'.format(self.bot_group).split())
             except Exception as e:
@@ -65,7 +65,6 @@ class InstallCommand(install):
             except KeyError:
                 gid = 0
 
-        # Set directory and file permissions.
         log.info('setting viber command bot file permissions')
         os.chown('/etc/viber', uid, gid)
         os.chmod('/etc/viber', 0o750)
