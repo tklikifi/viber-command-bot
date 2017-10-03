@@ -10,9 +10,9 @@ messages.
 
 ## Viber command bot
 
-Directory **vibercommandbot** contains a simple Viber bot that receives commands
-from a trusted Viber user. Bot executes the configured command and returns the
-answer.
+Directory **viber_command_bot** contains a simple Viber bot that receives
+commands from a trusted Viber user. Bot executes the configured command and
+returns the answer.
 
 ### Install
 
@@ -60,7 +60,7 @@ Add the following lines to */etc/nginx/nginx.conf*:
     $ sudo systemctl start viber-command-bot.service
     $ viber-command-bot-register
 
-## Send viber message
+## Send Viber message
 
 A small Python script **viber-send-message** can be used for sending
 messages to a trusted Viber user that has subscribed to public Viber bot
