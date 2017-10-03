@@ -59,7 +59,7 @@ Add the following lines to */etc/nginx/nginx.conf*:
     $ sudo cp config/viber-command-bot.service /usr/lib/systemd/system
     $ sudo systemctl enable viber-command-bot.service
     $ sudo systemctl start viber-command-bot.service
-    $ sudo viber-command-bot-register
+    $ sudo VIBER_CONF=/etc/viber/viber-command-bot.conf viber-command-bot-register
 
 ## Send Viber message
 
@@ -75,3 +75,8 @@ If no *user-id* is given, the Viber bot *notify_user_id* is used.
 User account that wants to send Viber messages must belong to **viber** group:
 
     $ sudo usermod -a -G viber user
+
+If you are using **viber command bot** for sending messages, set *VIBER_CONF*
+environment variable:
+
+    $ export VIBER_CONF=/etc/viber/viber-command-bot.conf
