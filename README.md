@@ -10,7 +10,7 @@ messages.
 
 ## Viber command bot
 
-Directory **viber_command_bot** contains a simple Viber bot that receives
+Directory *viber_command_bot* contains a simple Viber bot that receives
 commands from a trusted Viber user. Bot executes the configured command and
 returns the answer.
 
@@ -18,7 +18,7 @@ returns the answer.
 
 Here are instructions for installing the bot for NGINX in CentOS 7.
 
-#### Bot
+Install bot:
 
     $ sudo pip3.6 install setuptools
     $ python3.6 ./setup.py build
@@ -29,8 +29,6 @@ want the bot to execute:
 
     $ sudo vi /etc/viber/viber-command-bot.conf
 
-
-#### Nginx
 
 Add the following lines to */etc/nginx/nginx.conf*:
 
@@ -46,16 +44,15 @@ Add the following lines to */etc/nginx/nginx.conf*:
     ...
 
 
-#### Systemd
+Enable bot in systemd and start the service:
 
-    $ sudo cp config/viber-command-bot.service /usr/lib/systemd/system
     $ sudo systemctl enable viber-command-bot.service
     $ sudo systemctl start viber-command-bot.service
     $ sudo viber-command-bot-register
 
 ## Send Viber message
 
-A small Python script **viber-send-message** can be used for sending messages to
+A small Python script *viber-send-message* can be used for sending messages to
 Viber users that have subscribed to public Viber bot account, e.g.:
 
     $ viber-send-message 'Hello there!'
@@ -64,6 +61,6 @@ Viber users that have subscribed to public Viber bot account, e.g.:
 
 If no *user-id* is given, the Viber bot *notify_user_id* is used.
 
-User account that wants to send Viber messages must belong to **viber** group:
+User account that wants to send Viber messages must belong to *viber* group:
 
     $ sudo usermod -a -G viber user
