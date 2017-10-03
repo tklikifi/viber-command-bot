@@ -1,15 +1,39 @@
 #!/usr/bin/env python3
 
+import argparse
 import sys
 from viber_command_bot.viber import config, viber
 
 
-try:
-    print('Registering webhook "{}" ... '.format(config['Viber']['webhook']),
-          end='', flush=True)
-    viber.set_webhook(config['Viber']['webhook'])
+def parse_command_line_arguments():
+    parser = argparse.ArgumentParser(description='Register Viber bot webhook')
+    parser.add_argument('--un-register', action='store_true',
+                        help='un-register bot webhook')
+    return parser.parse_args()
+
+
+def main():
+    args = parse_command_line_arguments()
+
+    if args.un_register:
+        print('Un-registering webhook "{}" ... '.format(
+            config['Viber']['webhook']), end='', flush=True)
+        try:
+            viber.unset_webhook()
+        except Exception as e:
+            print('\nERROR: Failed to un-register bot: {}'.format(e))
+            return 1
+    else:
+        print('Registering webhook "{}" ... '.format(
+            config['Viber']['webhook']), end='', flush=True)
+        try:
+            viber.set_webhook(config['Viber']['webhook'])
+        except Exception as e:
+            print('\nERROR: Failed to register bot: {}'.format(e))
+            return 1
     print('OK.')
-except Exception as e:
-    print('\nERROR: Failed to register bot: {}'.format(e))
-    sys.exit(1)
-sys.exit(0)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

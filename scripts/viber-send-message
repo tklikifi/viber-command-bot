@@ -10,7 +10,7 @@ from viber_command_bot.viber import config, viber
 
 
 def parse_command_line_arguments():
-    parser = argparse.ArgumentParser(description='Send message using Viber')
+    parser = argparse.ArgumentParser(description='Send Viber message')
     parser.add_argument('--user-id', help='user id')
     parser.add_argument('--media-url', help='media URL')
     parser.add_argument('message', help='message text')

@@ -14,6 +14,5 @@ setup(name='viber_command_bot',
                         'Werkzeug', ],
       packages=['viber_command_bot', 'viber_command_bot.flask',],
       scripts=['scripts/viber-command-bot-register',
-               'scripts/viber-command-bot-unregister',
                'scripts/viber-send-message'],
       )
