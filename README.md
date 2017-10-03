@@ -20,14 +20,6 @@ Here are instructions for installing the bot for NGINX in CentOS 7.
 
 #### Bot
 
-    $ sudo useradd viber -s /usr/sbin/nologin
-    $ sudo mkdir /etc/viber
-    $ sudo chown viber:viber /etc/viber 
-    $ sudo chmod 710 /etc/viber 
-    $ sudo cp config/viber-command-bot.conf /etc/viber
-    $ sudo cp config/viber-command-bot.ini /etc/viber
-    $ sudo chown viber:viber /etc/viber/*
-    £ sudo chmod 640 /etc/viber/*
     $ sudo pip3.6 install setuptools
     $ python3.6 ./setup.py build
     $ sudo python3.6 ./setup.py install
@@ -59,7 +51,7 @@ Add the following lines to */etc/nginx/nginx.conf*:
     $ sudo cp config/viber-command-bot.service /usr/lib/systemd/system
     $ sudo systemctl enable viber-command-bot.service
     $ sudo systemctl start viber-command-bot.service
-    $ sudo VIBER_CONF=/etc/viber/viber-command-bot.conf viber-command-bot-register
+    $ sudo viber-command-bot-register
 
 ## Send Viber message
 
@@ -75,8 +67,3 @@ If no *user-id* is given, the Viber bot *notify_user_id* is used.
 User account that wants to send Viber messages must belong to **viber** group:
 
     $ sudo usermod -a -G viber user
-
-If you are using **viber command bot** for sending messages, set *VIBER_CONF*
-environment variable:
-
-    $ export VIBER_CONF=/etc/viber/viber-command-bot.conf
