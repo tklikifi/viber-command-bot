@@ -9,4 +9,4 @@ fi
 
 source "$DIR/.virtualenvrc"
 
-"$DIR/utils/send_message.py" "$@"
+"$DIR/vibercommandbot/utils/send_message.py" "$@"

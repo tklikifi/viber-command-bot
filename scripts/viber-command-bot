@@ -9,4 +9,4 @@ fi
 
 source "$DIR/.virtualenvrc"
 
-python "$DIR/bots/command/bot.py" "$@"
+python "$DIR/vibercommandbot/flask/application.py" "$@"

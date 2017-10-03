@@ -1,15 +1,15 @@
 import os
 import sys
-import common.config
 from viberbot import Api
 from viberbot.api.bot_configuration import BotConfiguration
+from vibercommandbot.config import ParseError, parse
 
 
 VIBER_CONF = '/etc/viber/bot.conf'
 
 try:
-    config = common.config.parse(os.getenv('VIBER_CONF', VIBER_CONF))
-except common.config.ParseError as e:
+    config = parse(os.getenv('VIBER_CONF', VIBER_CONF))
+except ParseError as e:
     print('ERROR: {}'.format(e))
     sys.exit(1)
 

@@ -17,8 +17,8 @@ from viberbot.api.viber_requests import ViberMessageRequest
 from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
-from common.messages import create_text_message_list
-from common.viber import config, viber
+from vibercommandbot.messages import create_text_message_list
+from vibercommandbot.viber import config, viber
 
 app = Flask(__name__)
 
