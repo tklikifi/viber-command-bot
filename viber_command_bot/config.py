@@ -17,7 +17,7 @@ def parse(file_path):
     if 'Viber' not in config:
         raise ParseError('Configuration block "Viber" is missing')
     for k in ['authentication_token', 'name', 'avatar', 'webhook',
-              'notify_user_id', 'trusted_user_ids',]:
+              'notify_user_id', 'trusted_user_ids', ]:
         if k not in config['Viber']:
             raise ParseError('Viber "{}" is not configured'.format(k))
 

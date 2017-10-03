@@ -167,7 +167,7 @@ bot_commands = create_bot_commands()
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-handler = logging.handlers.SysLogHandler(address = '/dev/log')
+handler = logging.handlers.SysLogHandler(address='/dev/log')
 formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)

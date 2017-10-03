@@ -10,13 +10,13 @@ from subprocess import check_call
 
 
 class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
+
     def run(self):
         develop.run(self)
 
 
 class PostInstallCommand(install):
-    """Post-installation for installation mode."""
+
     def run(self):
         install.run(self)
 
@@ -59,14 +59,14 @@ setup(name='viber_command_bot',
                         'idna', 'itsdangerous', 'Jinja2', 'MarkupSafe',
                         'requests', 'urllib3', 'uWSGI', 'viberbot',
                         'Werkzeug', ],
-      packages=['viber_command_bot', 'viber_command_bot.flask',],
+      packages=['viber_command_bot', 'viber_command_bot.flask', ],
       scripts=['scripts/viber-command-bot-register',
                'scripts/viber-send-message'],
       data_files=[('/etc/viber',
                    ['config/viber-command-bot.conf',
                     'config/viber-command-bot.ini']),
                   ('/usr/lib/systemd/system',
-                   ['config/viber-command-bot.service',])],
-      cmdclass={ 'develop': PostDevelopCommand,
-                 'install': PostInstallCommand, },
+                   ['config/viber-command-bot.service', ])],
+      cmdclass={'develop': PostDevelopCommand,
+                'install': PostInstallCommand, },
       )
