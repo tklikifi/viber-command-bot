@@ -76,9 +76,9 @@ def check_user_id(viber_request):
 
 
 def handle_viber_request(viber_request):
-    message = viber_request.message
-    if message.text.startswith('/'):
-        execute_command(viber_request, message.text[1:])
+    text = viber_request.message.text.strip()
+    if text.startswith('/'):
+        execute_command(viber_request, text[1:])
     else:
         text = 'You did not send a command.'
         viber.send_messages(viber_request.sender.id, [TextMessage(text=text)])
@@ -94,8 +94,6 @@ def execute_command(viber_request, command):
         viber.send_messages(viber_request.sender.id, [TextMessage(text=':-)')])
     elif command.startswith('echo '):
         messages = create_text_message_list(command[len('echo '):])
-        if not messages:
-            messages = [TextMessage(text=':-)')]
         viber.send_messages(viber_request.sender.id, messages)
     elif command not in bot_commands:
         logger.warning('Un-supported command from {}: {}'.format(
@@ -122,7 +120,7 @@ def execute_command(viber_request, command):
 
 
 def show_command_help():
-    text = 'Available commands:\n\n/echo -- Echo the text sent to the bot.\n'
+    text = 'Available commands:\n\n'
     for k, v in bot_commands.items():
         text += '/' + k + ' -- '
         if v.get('help') is not None:
@@ -130,7 +128,7 @@ def show_command_help():
         else:
             text += 'Help is not available for command "{}".'.format(k)
         text += '\n'
-    return text
+    return text + '/echo -- Echo the text sent to the bot.\n'
 
 
 def command_thread_target(command, output_format, user_id):
