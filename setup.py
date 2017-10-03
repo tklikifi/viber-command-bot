@@ -11,5 +11,5 @@ setup(name='vibercommandbot',
       install_requires=['certifi', 'chardet', 'click', 'Flask', 'future',
                         'idna', 'itsdangerous', 'Jinja2', 'MarkupSafe',
                         'requests', 'urllib3', 'viberbot', 'Werkzeug', ],
-      packages=['vibercommandbot',],
+      packages=['vibercommandbot', 'vibercommandbot.flask',],
       )
