@@ -1,3 +1,7 @@
+#
+# Viber Command Bot - systemd configuration file
+#
+
 [Unit]
 Description=uWSGI instance for Viber command bot
 After=network.target
