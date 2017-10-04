@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Viber command bot Flask application
+"""
+
 import argparse
 import json
 import logging
@@ -20,11 +24,18 @@ from viberbot.api.viber_requests import ViberUnsubscribedRequest
 from viber_command_bot.messages import create_text_message_list
 from viber_command_bot.viber import config, viber
 
+
 app = Flask(__name__)
 
 
 @app.route('/', methods=['POST'])
-def incoming():
+def bot_request():
+    """
+    Receive bot request from Viber service.
+
+    :return: Response(status=200), if request is successful
+             Response(status=403), if request is not allowed
+    """
 
     logger.debug('Received request, post data: {0}'.format(
         request.get_data()))
@@ -39,7 +50,7 @@ def incoming():
         viber.send_messages(viber_request.user.id,
                             [TextMessage(text='Hello, {}!\n\n{}'.format(
                                 viber_request.user.name,
-                                show_command_help()))])
+                                command_help()))])
     elif isinstance(viber_request, ViberMessageRequest):
         if not check_user_id(viber_request):
             return Response(status=403)
@@ -50,7 +61,7 @@ def incoming():
         viber.send_messages(viber_request.user.id,
                             [TextMessage(text='Hello, {}!\n\n{}'.format(
                                 viber_request.user.name,
-                                show_command_help()))])
+                                command_help()))])
     elif isinstance(viber_request, ViberUnsubscribedRequest):
         logger.info('User un-subscribed: {}'.format(viber_request.user_id))
     elif isinstance(viber_request, ViberFailedRequest):
@@ -61,6 +72,13 @@ def incoming():
 
 
 def check_user_id(viber_request):
+    """
+    Check that the request comes from a trusted user id.
+
+    :param viber_request: request from Viber service
+    :return: True, if request is from trusted user id
+             False, if request comes from un-trusted user id
+    """
     if viber_request.sender.id not in config['Viber']['trusted_user_ids']:
         text = 'Message from untrusted user {} ({}): {}'.format(
             viber_request.sender.name, viber_request.sender.id,
@@ -76,6 +94,12 @@ def check_user_id(viber_request):
 
 
 def handle_viber_request(viber_request):
+    """
+    Checks that Viber request is a command.
+
+    :param viber_request: request from Viber service
+    :return: None
+    """
     text = viber_request.message.text.strip()
     if text.startswith('/'):
         execute_command(viber_request, text[1:])
@@ -85,11 +109,18 @@ def handle_viber_request(viber_request):
 
 
 def execute_command(viber_request, command):
+    """
+    Executes command received in Viber request.
+
+    :param viber_request: request from Viber service
+    :param command: command found in request
+    :return: None
+    """
     logger.info('Command from user {}: {}'.format(
         viber_request.sender.name, command))
     if command == 'help':
         viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text=show_command_help())])
+                            [TextMessage(text=command_help())])
     elif command == 'echo':
         viber.send_messages(viber_request.sender.id, [TextMessage(text=':-)')])
     elif command.startswith('echo '):
@@ -119,7 +150,12 @@ def execute_command(viber_request, command):
         command_thread.start()
 
 
-def show_command_help():
+def command_help():
+    """
+    Creates help text for the available commands.
+
+    :return: help text
+    """
     text = 'Available commands:\n\n'
     text += '/echo -- Echo the text sent to the bot (internal command).\n'
     for k, v in bot_commands.items():
@@ -132,23 +168,39 @@ def show_command_help():
     return text
 
 
-def command_thread_target(command, output_format, user_id):
-    text, media = execute_local_command(command, output_format)
+def command_thread_target(execute, output_format, user_id):
+    """
+    Local command is run in a separate thread.
+
+    :param execute: local command to execute
+    :param output_format: output format specified for the command in
+                          configuration
+    :param user_id: user id who will receive the answer
+    :return: None
+    """
+    text, media = execute_local_command(execute, output_format)
     messages = create_text_message_list(text)
     if media:
         messages.append(URLMessage(media=media))
     viber.send_messages(user_id, messages)
 
 
-def execute_local_command(command, output_format=None):
-    logger.debug('Running command: {}'.format(command))
-    p = subprocess.Popen(command, stdout=subprocess.PIPE,
+def execute_local_command(execute, output_format=None):
+    """
+    Execute local command in another process.
+
+    :param execute: command found
+    :param output_format:
+    :return: (message text, optional media url)
+    """
+    logger.debug('Running command: {}'.format(execute))
+    p = subprocess.Popen(execute, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
     output, error = p.communicate()
     rc = p.returncode
     if rc != 0:
         return 'Failed to execute command "{}": {}'.format(
-            command, output.decode().strip()), None
+            execute, output.decode().strip()), None
     if output_format == 'json':
         message = json.loads(output.decode().strip())
         return message.get('text'), message.get('media')
@@ -156,6 +208,11 @@ def execute_local_command(command, output_format=None):
 
 
 def create_bot_commands():
+    """
+    Create bot commands dict from the bot configuration.
+
+    :return: commands dict
+    """
     commands = dict()
     prefix = 'Command '
     for section in [s for s in config.sections() if s.startswith(prefix)]:
@@ -174,6 +231,11 @@ logger.addHandler(handler)
 
 
 def parse_command_line_arguments():
+    """
+    Parse command line arguments of the development server.
+
+    :return: arguments
+    """
     parser = argparse.ArgumentParser(description='Command bot using Viber')
     parser.add_argument('--debug', type=bool, default=False, help='debug')
     parser.add_argument('--log-level', help='log level')

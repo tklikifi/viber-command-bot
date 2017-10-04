@@ -1,12 +1,25 @@
+"""
+Viber bot configuration parsing
+"""
+
 import configparser
 import os
 
 
 class ParseError(Exception):
+    """
+    Error found during bot configuration parsing.
+    """
     pass
 
 
 def parse(file_path):
+    """
+    Parse bot configuration file.
+
+    :param file_path: path to the configuration file
+    :return: parsed configuration
+    """
     if not file_path:
         raise ParseError('Configuration file not specified')
     config = configparser.ConfigParser()

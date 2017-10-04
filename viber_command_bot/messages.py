@@ -1,3 +1,7 @@
+"""
+Utility functions for Viber bot messages
+"""
+
 from viberbot.api.messages.text_message import TextMessage
 
 
@@ -9,6 +13,9 @@ def create_text_message_list(text):
     """
     Split text into a list of text messages. Also, limit the number of the
     text messages.
+
+    :param text: original text
+    :return: list of TextMessage objects
     """
     messages = list()
     if not text:

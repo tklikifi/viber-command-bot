@@ -1,3 +1,10 @@
+"""
+Viber bot API configuration
+
+It is possible to change bot configuration file by setting VIBER_CONF
+environment variable.
+"""
+
 import os
 import sys
 from viberbot import Api
@@ -10,6 +17,7 @@ VIBER_CONF = '/etc/viber/viber-command-bot.conf'
 try:
     config = parse(os.getenv('VIBER_CONF', VIBER_CONF))
 except ParseError as e:
+    # Configuration parsing error is fatal.
     print('ERROR: {}'.format(e))
     sys.exit(1)
 
