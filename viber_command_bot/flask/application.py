@@ -238,12 +238,25 @@ def create_bot_commands():
 
 bot_commands = create_bot_commands()
 
+log_level = config.get('Logger', 'level', fallback='INFO').upper()
+use_syslog = config.getboolean('Logger', 'syslog', fallback=True)
+log_file = config.get('Logger', 'file', fallback=None)
+
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-handler = logging.handlers.SysLogHandler(address='/dev/log')
-formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+logger.setLevel(log_level)
+
+if use_syslog:
+    handler = logging.handlers.SysLogHandler(address='/dev/log')
+    formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+if log_file:
+    handler = logging.FileHandler(log_file)
+    formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
+                                  '%(name)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 
 def parse_command_line_arguments():
@@ -254,7 +267,6 @@ def parse_command_line_arguments():
     """
     parser = argparse.ArgumentParser(description='Command bot using Viber')
     parser.add_argument('--debug', type=bool, default=False, help='debug')
-    parser.add_argument('--log-level', help='log level')
     parser.add_argument('--listen-address', help='server listen address')
     parser.add_argument('--listen-port', type=int, help='server listen port')
     parser.add_argument('--tls-private-key', help='TLS private key file')
@@ -263,7 +275,7 @@ def parse_command_line_arguments():
     parser.add_argument('--register', action='store_true', help='register bot')
     parser.add_argument('--un-register', action='store_true',
                         help='un-register bot')
-    parser.set_defaults(log_level='INFO', webhook=config['Viber']['webhook'])
+    parser.set_defaults(webhook=config['Viber']['webhook'])
     return parser.parse_args()
 
 
@@ -291,11 +303,5 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # Start Flask development server.
-    development_handler = logging.StreamHandler()
-    development_formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
-                                              '%(name)s: %(message)s')
-    development_handler.setFormatter(development_formatter)
-    logger.addHandler(development_handler)
-    logger.setLevel(args.log_level.upper())
     app.run(host=args.listen_address, port=args.listen_port, debug=args.debug,
             ssl_context=(args.tls_certificate, args.tls_private_key))
