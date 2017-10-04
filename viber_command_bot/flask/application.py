@@ -56,14 +56,14 @@ def bot_request():
             return Response(status=403)
         handle_viber_request(viber_request)
     elif isinstance(viber_request, ViberSubscribedRequest):
-        logger.info('User subscribed: {} ({})'.format(
+        logger.info('User "{}" subscribed as user id "{}"'.format(
             viber_request.user.name, viber_request.user.id))
         viber.send_messages(viber_request.user.id,
                             [TextMessage(text='Hello, {}!\n\n{}'.format(
                                 viber_request.user.name,
                                 command_help()))])
     elif isinstance(viber_request, ViberUnsubscribedRequest):
-        logger.info('User un-subscribed: {}'.format(viber_request.user_id))
+        logger.info('User id "{}" un-subscribed'.format(viber_request.user_id))
     elif isinstance(viber_request, ViberFailedRequest):
         logger.warning('Client failed receiving message, failure: '
                        '{0}'.format(viber_request))
@@ -80,16 +80,16 @@ def check_user_id(viber_request):
              False, if request comes from un-trusted user id
     """
     if viber_request.sender.id not in config['Viber']['trusted_user_ids']:
-        text = 'Message from untrusted user {} ({}): {}'.format(
-            viber_request.sender.name, viber_request.sender.id,
-            viber_request.message.text)
+        text = ('Received message from un-trusted user "{}" (user id "{}"): '
+                '{}'.format(viber_request.sender.name, viber_request.sender.id,
+                           viber_request.message.text))
         logger.warning(text)
         viber.send_messages(config['Viber']['notify_user_id'],
                             create_text_message_list(text))
         return False
-    logger.info('Message from trusted user {} ({}): {}'.format(
-        viber_request.sender.name, viber_request.sender.id,
-        viber_request.message.text))
+    logger.info('Received message from trusted user "{}" (user id "{}"): '
+                '{}'.format(viber_request.sender.name, viber_request.sender.id,
+                            viber_request.message.text))
     return True
 
 
@@ -116,8 +116,8 @@ def execute_command(viber_request, command):
     :param command: command found in request
     :return: None
     """
-    logger.info('Command from user {}: {}'.format(
-        viber_request.sender.name, command))
+    logger.info('Received command "{}" from user "{}"'.format(
+        command, viber_request.sender.name))
     if command == 'help':
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text=command_help())])
@@ -127,22 +127,23 @@ def execute_command(viber_request, command):
         messages = create_text_message_list(command[len('echo '):])
         viber.send_messages(viber_request.sender.id, messages)
     elif command not in bot_commands:
-        logger.warning('Un-supported command from {}: {}'.format(
-            viber_request.sender.name, command))
+        logger.warning('Un-supported command "{}" from user "{}"'.format(
+            command, viber_request.sender.name))
         viber.send_messages(
             viber_request.sender.id,
             [TextMessage(text='Command "{}" is not supported, '
                               'try "/help".'.format(command))])
     elif 'execute' not in bot_commands[command]:
-        logger.error('Execute parameter not configured for command: '
-                     '{}'.format(command))
+        logger.error('Execute parameter is not configured for command '
+                     '"{}"'.format(command))
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not properly '
                                               'configured.'.format(command))])
     elif bot_commands[command].get('output_format', 'text') not in [
         'text', 'json']:
-        logger.error('Output format parameter not properly configured for '
-                     'command: {}'.format(command))
+        logger.error('Output format parameter is not properly configured for '
+                     'command "{}" ("{}" should be "text" or "json")'.format(
+            command, bot_commands[command].get('output_format')))
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not properly '
                                               'configured.'.format(command))])
@@ -202,7 +203,7 @@ def execute_local_command(execute, output_format=None):
     :param output_format:
     :return: (message text, optional media url)
     """
-    logger.debug('Running command: {}'.format(execute))
+    logger.debug('Running command "{}"'.format(execute))
     p = subprocess.Popen(execute, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
     output, error = p.communicate()
