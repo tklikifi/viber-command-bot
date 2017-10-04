@@ -104,7 +104,7 @@ def handle_viber_request(viber_request):
     if text.startswith('/'):
         execute_command(viber_request, text[1:])
     else:
-        text = 'You did not send a command.'
+        text = 'You did not send a command, try "/help".'
         viber.send_messages(viber_request.sender.id, [TextMessage(text=text)])
 
 
@@ -129,12 +129,20 @@ def execute_command(viber_request, command):
     elif command not in bot_commands:
         logger.warning('Un-supported command from {}: {}'.format(
             viber_request.sender.name, command))
-        viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text='Command "{}" is not '
-                                              'supported.'.format(command))])
+        viber.send_messages(
+            viber_request.sender.id,
+            [TextMessage(text='Command "{}" is not supported, '
+                              'try "/help".'.format(command))])
     elif 'execute' not in bot_commands[command]:
-        logger.warning('Execute parameter not configured for command: '
-                       '{}'.format(command))
+        logger.error('Execute parameter not configured for command: '
+                     '{}'.format(command))
+        viber.send_messages(viber_request.sender.id,
+                            [TextMessage(text='Command "{}" is not properly '
+                                              'configured.'.format(command))])
+    elif bot_commands[command].get('output_format', 'text') not in [
+        'text', 'json']:
+        logger.error('Output format parameter not properly configured for '
+                     'command: {}'.format(command))
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not properly '
                                               'configured.'.format(command))])
@@ -145,7 +153,7 @@ def execute_command(viber_request, command):
         command_thread = threading.Thread(
             target=command_thread_target,
             args=(bot_commands[command].get('execute'),
-                  bot_commands[command].get('output_format'),
+                  bot_commands[command].get('output_format', 'text'),
                   viber_request.sender.id,))
         command_thread.start()
 
@@ -156,12 +164,13 @@ def command_help():
 
     :return: help text
     """
+    help = dict((k, bot_commands[k].get('help')) for k in bot_commands.keys())
+    help['echo'] = 'Echo the text sent to the bot (internal command).'
     text = 'Available commands:\n\n'
-    text += '/echo -- Echo the text sent to the bot (internal command).\n'
-    for k, v in bot_commands.items():
+    for k, v in sorted(help.items()):
         text += '/' + k + ' -- '
-        if v.get('help') is not None:
-            text += v.get('help')
+        if v is not None:
+            text += v
         else:
             text += 'Help is not available for command "{}".'.format(k)
         text += '\n'
@@ -173,7 +182,7 @@ def command_thread_target(execute, output_format, user_id):
     Local command is run in a separate thread.
 
     :param execute: local command to execute
-    :param output_format: output format specified for the command in
+    :param output_format: expected command output format specified in the bot
                           configuration
     :param user_id: user id who will receive the answer
     :return: None
@@ -202,7 +211,13 @@ def execute_local_command(execute, output_format=None):
         return 'Failed to execute command "{}": {}'.format(
             execute, output.decode().strip()), None
     if output_format == 'json':
-        message = json.loads(output.decode().strip())
+        try:
+            message = json.loads(output.decode().strip())
+        except ValueError:
+            logger.error('Command "{}" output was not JSON: {}'.format(
+                execute, output.decode().strip()))
+            return ('Failed to execute command "{}": Command output '
+                    'was not JSON'.format(execute), None)
         return message.get('text'), message.get('media')
     return output.decode().strip(), None
 
