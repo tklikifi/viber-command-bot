@@ -10,6 +10,10 @@ from setuptools.command.install import install
 from subprocess import check_call
 
 
+bot_user = 'viber'
+bot_group = 'viber'
+
+
 class DevelopCommand(develop):
 
     def run(self):
@@ -18,50 +22,33 @@ class DevelopCommand(develop):
 
 class InstallCommand(install):
 
-    user_options = install.user_options + [
-        ('bot-user=', None,
-         'Specify the user that will own the configuration files.'),
-        ('bot-group=', None,
-         'Specify the group that will be set to the configuration files.'),
-    ]
-
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.bot_user = 'viber'
-        self.bot_group = 'viber'
-
-    def finalize_options(self):
-        install.finalize_options(self)
-
     def run(self):
         install.run(self)
 
         try:
-            uid = pwd.getpwnam(self.bot_user).pw_uid
+            uid = pwd.getpwnam(bot_user).pw_uid
         except KeyError:
-            log.info('creating viber command bot user {}'.format(
-                self.bot_user))
+            log.info('creating viber command bot user {}'.format(bot_user))
             try:
                 check_call('useradd -M -s /usr/sbin/nologin {}'.format(
-                    self.bot_user).split())
+                    bot_user).split())
             except Exception as e:
                 print('ERROR: {}'.format(e))
             try:
-                uid = pwd.getpwnam(self.bot_user).pw_uid
+                uid = pwd.getpwnam(bot_user).pw_uid
             except KeyError:
                 uid = 0
 
         try:
-            gid = grp.getgrnam(self.bot_group).gr_gid
+            gid = grp.getgrnam(bot_group).gr_gid
         except KeyError:
-            log.info('creating viber command bot group {}'.format(
-                self.bot_group))
+            log.info('creating viber command bot group {}'.format(bot_group))
             try:
-                check_call('groupadd {}'.format(self.bot_group).split())
+                check_call('groupadd {}'.format(bot_group).split())
             except Exception as e:
                 print('ERROR: {}'.format(e))
             try:
-                gid = grp.getgrnam(self.bot_group).gr_gid
+                gid = grp.getgrnam(bot_group).gr_gid
             except KeyError:
                 gid = 0
 
@@ -82,8 +69,7 @@ setup(name='viber_command_bot',
       url='https://github.com/tklikifi/viber/',
       install_requires=['certifi', 'chardet', 'click', 'Flask', 'future',
                         'idna', 'itsdangerous', 'Jinja2', 'MarkupSafe',
-                        'requests', 'urllib3', 'uWSGI', 'viberbot',
-                        'Werkzeug', ],
+                        'requests', 'urllib3', 'viberbot', 'Werkzeug', ],
       packages=['viber_command_bot', 'viber_command_bot.flask', ],
       scripts=['scripts/viber-command-bot-register',
                'scripts/viber-send-message'],

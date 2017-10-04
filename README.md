@@ -7,7 +7,6 @@ These tools use Viber Python Bot API
 (https://developers.viber.com/docs/api/python-bot-api/) to send and receive
 messages.
 
-
 ## Viber command bot
 
 Directory *viber_command_bot* contains a simple Viber bot that receives
@@ -16,13 +15,27 @@ returns the answer.
 
 ### Install
 
-Here are instructions for installing the bot for NGINX in CentOS 7.
+Here are simple instructions for installing the bot with NGINX in CentOS 7.4.
 
+Install Python 3 and uWSGI packages:
+
+    $ sudo yum -y install python34 python34-libs python34-setuptools python34-pip
+    $ sudo yum -y install uwsgi uwsgi-plugin-python3
+
+Install fixed *viberbot* package:
+
+    $ pushd /tmp
+    $ git clone https://github.com/tklikifi/viber-bot-python.git
+    $ cd viber-bot-python
+    $ python3 ./setup.py build
+    $ sudo python3 ./setup.py install
+    $ popd
+    
 Install bot:
 
-    $ sudo pip3.6 install setuptools
-    $ python3.6 ./setup.py build
-    $ sudo python3.6 ./setup.py install
+    $ sudo pip3 install -r requirements.txt
+    $ python3 ./setup.py build
+    $ sudo python3 ./setup.py install
 
 Edit bot config file to include authentication token etc. and the commands you
 want the bot to execute:
