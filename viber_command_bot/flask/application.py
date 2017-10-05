@@ -19,7 +19,7 @@ from viberbot.api.viber_requests import ViberMessageRequest
 from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
-from viber_command_bot.info import info, version
+from viber_command_bot.info import info
 from viber_command_bot.messages import create_text_message_list
 from viber_command_bot.viber import config, viber
 
@@ -121,12 +121,8 @@ def execute_command(viber_request, command):
     """
     logger.info('Received command "{}" from user "{}"'.format(
         command, viber_request.sender.name))
-    if command == 'bot':
-        viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text=info)])
-    elif command == 'version':
-        viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text=version)])
+    if command == 'version':
+        viber.send_messages(viber_request.sender.id, [TextMessage(text=info)])
     elif command == 'help':
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text=command_help())])
@@ -175,9 +171,8 @@ def command_help():
     :return: help text
     """
     help = dict((k, bot_commands[k].get('help')) for k in bot_commands.keys())
-    help['bot'] = 'Show information about the bot (internal command).'
     help['echo'] = 'Echo the text sent to the bot (internal command).'
-    help['version'] = 'Show the version of the bot (internal command).'
+    help['version'] = 'Show information about the bot (internal command).'
     text = 'Available commands:\n\n'
     for k, v in sorted(help.items()):
         text += '/' + k + ' -- '
