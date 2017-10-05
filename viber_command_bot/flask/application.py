@@ -19,10 +19,9 @@ from viberbot.api.viber_requests import ViberMessageRequest
 from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
-import viber_command_bot.info as info
+from viber_command_bot.info import info, version
 from viber_command_bot.messages import create_text_message_list
 from viber_command_bot.viber import config, viber
-from viber_command_bot.version import __version__
 
 
 app = Flask(__name__)
@@ -123,18 +122,11 @@ def execute_command(viber_request, command):
     logger.info('Received command "{}" from user "{}"'.format(
         command, viber_request.sender.name))
     if command == 'bot':
-        viber.send_messages(
-            viber_request.sender.id,
-            [TextMessage(text='Name: {}\n'
-                              'Version: {}\n'
-                              'GitHub: {}\n'
-                              'License: {}'.format(info.name,
-                                                   __version__,
-                                                   info.github,
-                                                   info.license))])
+        viber.send_messages(viber_request.sender.id,
+                            [TextMessage(text=info)])
     elif command == 'version':
         viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text=__version__)])
+                            [TextMessage(text=version)])
     elif command == 'help':
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text=command_help())])

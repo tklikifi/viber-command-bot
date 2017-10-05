@@ -104,3 +104,6 @@ ENV/
 
 # IDE
 .idea
+
+# GIT
+viber_command_bot/git.py

@@ -5,13 +5,24 @@ import os
 import pwd
 from distutils import log
 from setuptools import setup
+from setuptools.command.build_py import build_py
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-from subprocess import check_call
+from subprocess import check_call, check_output
 
 
 bot_user = 'viber'
 bot_group = 'viber'
+
+
+class BuildCommand(build_py):
+
+    def run(self):
+        branch = check_output('git rev-parse --abbrev-ref HEAD'.split())
+        with open('viber_command_bot/git.py', 'w') as f:
+            f.write("# THIS FILE IS GENERATED -- DO NOT EDIT!!!\n"
+                    "branch = '{}'\n".format(branch.decode().strip()))
+        build_py.run(self)
 
 
 class DevelopCommand(develop):
@@ -60,6 +71,7 @@ class InstallCommand(install):
         os.chown('/etc/viber/viber-command-bot.ini', uid, gid)
         os.chmod('/etc/viber/viber-command-bot.ini', 0o640)
 
+
 exec(open('viber_command_bot/version.py').read())
 setup(name='viber_command_bot',
       version=__version__,
@@ -78,6 +90,7 @@ setup(name='viber_command_bot',
                     'config/viber-command-bot.ini']),
                   ('/usr/lib/systemd/system',
                    ['config/viber-command-bot.service', ])],
-      cmdclass={'develop': DevelopCommand,
+      cmdclass={'build_py': BuildCommand,
+                'develop': DevelopCommand,
                 'install': InstallCommand, },
       )

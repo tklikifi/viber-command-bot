@@ -1,5 +1,16 @@
+"""
+Information about the bot
+"""
+
+from viber_command_bot.version import __version__ as version
+
+try:
+    from viber_command_bot.git import branch
+except ImportError:
+    branch = 'master'
+
 name = 'Viber Command Bot'
-github = 'https://github.com/tklikifi/viber/'
+github = 'https://github.com/tklikifi/viber/tree/{}'.format(branch)
 license = '''MIT License
 
 Copyright (c) 2017 Tommi Linnakangas
@@ -21,3 +32,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.'''
+
+info = ('Name: {}\n'
+        'Version: {}\n'
+        'GitHub: {}\n'
+        'License: {}'.format(name, version, github, license))
