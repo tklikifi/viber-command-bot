@@ -10,7 +10,7 @@ except ImportError:
     branch = 'master'
 
 name = 'Viber Command Bot'
-github = 'https://github.com/tklikifi/viber/tree/{}'.format(branch)
+github = 'https://github.com/tklikifi/viber-command-bot/tree/{}'.format(branch)
 license = '''MIT License
 
 Copyright (c) 2017 Tommi Linnakangas

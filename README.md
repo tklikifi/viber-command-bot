@@ -1,4 +1,4 @@
-# Project Viber
+# Viber Command Bot
 
 This is a small project to get familiar with Viber messaging service
 (https://www.viber.com).
