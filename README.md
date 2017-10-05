@@ -1,28 +1,38 @@
 # Viber Command Bot
 
-This is a small project to get familiar with Viber messaging service
-(https://www.viber.com).
+This is a small Python project to get familiar with Viber messaging service.
 
-These tools use Viber Python Bot API
-(https://developers.viber.com/docs/api/python-bot-api/) to send and receive
-messages.
+- https://www.viber.com
+
+The project uses Viber Python Bot API to send and receive messages.
+
+- https://developers.viber.com/docs/api/python-bot-api/
+
+Check API documentation about how to setup bot accounts.
+
+- https://developers.viber.com/docs/general/get-started/
+
 
 ## Viber command bot
 
-Directory *viber_command_bot* contains a simple Viber bot that receives
-commands from a trusted Viber user. Bot executes the configured command and
-returns the answer.
+Directory *viber_command_bot* contains a simple Viber bot that receives commands
+from a trusted Viber user. Bot executes the configured command and returns the
+answer. As a security measure, the bot will not use any information received
+from the user as input to the commands.
+
 
 ### Install
 
-Here are simple instructions for installing the bot with NGINX in CentOS 7.4.
-
-Install Python 3 and uWSGI packages:
+The current implementation is tested in **CentOS 7.4** with **Python 3.4**.
+First, install Python 3 and uWSGI packages.
 
     $ sudo yum -y install python34 python34-libs python34-setuptools python34-pip
     $ sudo yum -y install uwsgi uwsgi-plugin-python3
 
-Install fixed *viberbot* package:
+At the moment the original *viberbot* package
+(https://github.com/Viber/viber-bot-python) does not work with Python 3.4 and
+Flask (it does work with Python 3.6 and Flask), so it is necessary to install
+fixed package:
 
     $ pushd /tmp
     $ git clone https://github.com/tklikifi/viber-bot-python.git
@@ -37,11 +47,31 @@ Install bot:
     $ python3 ./setup.py build
     $ sudo python3 ./setup.py install
 
-Edit bot config file to include authentication token etc. and the commands you
-want the bot to execute:
+*"sudo python3 ./setup.py install"* command will do the following:
 
-    $ sudo vi /etc/viber/viber-command-bot.conf
+- Installs Python modules, scripts and configuration files.
+- Creates user *viber*, if it does not exist.
+- Creates group *viber*, if it does not exist.
+- Sets directory */etc/viber* owner to *viber:viber*.
+- Sets the owner of configuration files in */etc/viber* to *viber:viber*.
+- Sets permissions of */etc/viber* directory to *750*.
+- Sets permissions of configuration files in */etc/viber* directory to *640*.
 
+The bot will run as user *viber*.
+
+Edit bot configuration file */etc/viber/viber-command-bot.conf* to include the
+following options in *Viber* configuration block:
+
+- **authentication_token** - authentication token for the public Viber bot
+  account
+- **name** - bot name shown in the message
+- **avatar** - image URL for bot avatar
+- **webhook** - webhook URL of the bot
+- **notify_user_id** - user id who receives notifications from the bot
+- **trusted_user_ids** -  list of user ids that are allowed to send messages
+  to the bot
+
+Also, add the commands you want the bot to execute.
 
 Add the following lines to */etc/nginx/nginx.conf*:
 
@@ -63,6 +93,7 @@ Enable bot in systemd and start the service:
     $ sudo systemctl start viber-command-bot.service
     $ sudo viber-command-bot-register
 
+
 ## Send Viber message
 
 A small Python script *viber-send-message* can be used for sending messages to
@@ -72,7 +103,7 @@ Viber users that have subscribed to public Viber bot account, e.g.:
     $ viber-send-message --user-id xxyyzz 'Hello there!'
     $ viber-send-message --media http://example.com/image.jpg 'Here is my image!'
 
-If no *user-id* is given, the Viber bot *notify_user_id* is used.
+If no *user-id* is given, the configured *notify_user_id* is used.
 
 User account that wants to send Viber messages must belong to *viber* group:
 

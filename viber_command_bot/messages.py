@@ -23,7 +23,7 @@ def create_text_message_list(text):
     messages = list()
     if not text:
         return messages
-    truncated_text = text[:(MAX_TEXT_SIZE)]
+    truncated_text = text[:MAX_TEXT_SIZE]
     for chunk in [truncated_text[i:i + MAX_TEXT_MESSAGE_SIZE] for i in range(
             0, len(truncated_text), MAX_TEXT_MESSAGE_SIZE)]:
         messages.append(TextMessage(text=chunk))

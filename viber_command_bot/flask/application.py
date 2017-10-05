@@ -83,7 +83,7 @@ def check_user_id(viber_request):
     if viber_request.sender.id not in config.get('Viber', 'trusted_user_ids'):
         text = ('Received message from un-trusted user "{}" (user id "{}"): '
                 '{}'.format(viber_request.sender.name, viber_request.sender.id,
-                           viber_request.message.text))
+                            viber_request.message.text))
         logger.warning(text)
         viber.send_messages(config.get('Viber', 'notify_user_id'),
                             create_text_message_list(text))
@@ -145,10 +145,10 @@ def execute_command(viber_request, command):
                             [TextMessage(text='Command "{}" is not properly '
                                               'configured.'.format(command))])
     elif bot_commands[command].get('output_format', 'text') not in [
-        'text', 'json']:
+            'text', 'json']:
         logger.error('Output format parameter is not properly configured for '
                      'command "{}" ("{}" should be "text" or "json")'.format(
-            command, bot_commands[command].get('output_format')))
+                        command, bot_commands[command].get('output_format')))
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text='Command "{}" is not properly '
                                               'configured.'.format(command))])
@@ -170,11 +170,12 @@ def command_help():
 
     :return: help text
     """
-    help = dict((k, bot_commands[k].get('help')) for k in bot_commands.keys())
-    help['echo'] = 'Echo the text sent to the bot (internal command).'
-    help['version'] = 'Show information about the bot (internal command).'
+    help_dict = dict((k, bot_commands[k].get('help')) for k in
+                     bot_commands.keys())
+    help_dict['echo'] = 'Echo the text sent to the bot (internal command).'
+    help_dict['version'] = 'Show information about the bot (internal command).'
     text = 'Available commands:\n\n'
-    for k, v in sorted(help.items()):
+    for k, v in sorted(help_dict.items()):
         text += '/' + k + ' -- '
         if v is not None:
             text += v

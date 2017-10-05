@@ -73,6 +73,7 @@ class InstallCommand(install):
 
 
 exec(open('viber_command_bot/version.py').read())
+# noinspection PyUnresolvedReferences
 setup(name='viber_command_bot',
       version=__version__,
       description='Python Viber Command Bot',

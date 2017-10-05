@@ -11,7 +11,7 @@ except ImportError:
 
 name = 'Viber Command Bot'
 github = 'https://github.com/tklikifi/viber-command-bot/tree/{}'.format(branch)
-license = '''MIT License
+bot_license = '''MIT License
 
 Copyright (c) 2017 Tommi Linnakangas
 
@@ -36,4 +36,4 @@ SOFTWARE.'''
 info = ('Name: {}\n'
         'Version: {}\n'
         'GitHub: {}\n'
-        'License: {}'.format(name, version, github, license))
+        'License: {}'.format(name, version, github, bot_license))
