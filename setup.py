@@ -60,9 +60,9 @@ class InstallCommand(install):
         os.chown('/etc/viber/viber-command-bot.ini', uid, gid)
         os.chmod('/etc/viber/viber-command-bot.ini', 0o640)
 
-
+exec(open('viber_command_bot/version.py').read())
 setup(name='viber_command_bot',
-      version='0.1.0',
+      version=__version__,
       description='Python Viber Command Bot',
       author='Tommi Linnakangas',
       author_email='tkl@iki.fi',

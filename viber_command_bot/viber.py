@@ -18,7 +18,7 @@ try:
     config = parse(os.getenv('VIBER_CONF', VIBER_CONF))
 except ParseError as e:
     # Configuration parsing error is fatal.
-    print('ERROR: {}'.format(e))
+    print('FATAL: {}'.format(e))
     sys.exit(1)
 
 viber = Api(BotConfiguration(

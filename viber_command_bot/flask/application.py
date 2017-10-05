@@ -4,11 +4,9 @@
 Viber command bot Flask application
 """
 
-import argparse
 import json
 import logging
 import subprocess
-import sys
 import threading
 from logging.handlers import SysLogHandler
 
@@ -21,8 +19,10 @@ from viberbot.api.viber_requests import ViberMessageRequest
 from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
+import viber_command_bot.info as info
 from viber_command_bot.messages import create_text_message_list
 from viber_command_bot.viber import config, viber
+from viber_command_bot.version import __version__
 
 
 app = Flask(__name__)
@@ -35,6 +35,7 @@ def bot_request():
 
     :return: Response(status=200), if request is successful
              Response(status=403), if request is not allowed
+    :raises Exception: if message sending fails
     """
 
     logger.debug('Received request, post data: {0}'.format(
@@ -78,13 +79,14 @@ def check_user_id(viber_request):
     :param viber_request: request from Viber service
     :return: True, if request is from trusted user id
              False, if request comes from un-trusted user id
+    :raises Exception: if message sending fails
     """
-    if viber_request.sender.id not in config['Viber']['trusted_user_ids']:
+    if viber_request.sender.id not in config.get('Viber', 'trusted_user_ids'):
         text = ('Received message from un-trusted user "{}" (user id "{}"): '
                 '{}'.format(viber_request.sender.name, viber_request.sender.id,
                            viber_request.message.text))
         logger.warning(text)
-        viber.send_messages(config['Viber']['notify_user_id'],
+        viber.send_messages(config.get('Viber', 'notify_user_id'),
                             create_text_message_list(text))
         return False
     logger.info('Received message from trusted user "{}" (user id "{}"): '
@@ -99,6 +101,7 @@ def handle_viber_request(viber_request):
 
     :param viber_request: request from Viber service
     :return: None
+    :raises Exception: if message sending fails
     """
     text = viber_request.message.text.strip()
     if text.startswith('/'):
@@ -115,10 +118,24 @@ def execute_command(viber_request, command):
     :param viber_request: request from Viber service
     :param command: command found in request
     :return: None
+    :raises Exception: if message sending fails
     """
     logger.info('Received command "{}" from user "{}"'.format(
         command, viber_request.sender.name))
-    if command == 'help':
+    if command == 'bot':
+        viber.send_messages(
+            viber_request.sender.id,
+            [TextMessage(text='Name: {}\n'
+                              'Version: {}\n'
+                              'GitHub: {}\n'
+                              'License: {}'.format(info.name,
+                                                   __version__,
+                                                   info.github,
+                                                   info.license))])
+    elif command == 'version':
+        viber.send_messages(viber_request.sender.id,
+                            [TextMessage(text=__version__)])
+    elif command == 'help':
         viber.send_messages(viber_request.sender.id,
                             [TextMessage(text=command_help())])
     elif command == 'echo':
@@ -166,7 +183,9 @@ def command_help():
     :return: help text
     """
     help = dict((k, bot_commands[k].get('help')) for k in bot_commands.keys())
+    help['bot'] = 'Show information about the bot (internal command).'
     help['echo'] = 'Echo the text sent to the bot (internal command).'
+    help['version'] = 'Show the version of the bot (internal command).'
     text = 'Available commands:\n\n'
     for k, v in sorted(help.items()):
         text += '/' + k + ' -- '
@@ -187,6 +206,7 @@ def command_thread_target(execute, output_format, user_id):
                           configuration
     :param user_id: user id who will receive the answer
     :return: None
+    :raises Exception: if message sending fails
     """
     text, media = execute_local_command(execute, output_format)
     messages = create_text_message_list(text)
@@ -241,6 +261,7 @@ bot_commands = create_bot_commands()
 log_level = config.get('Logger', 'level', fallback='INFO').upper()
 use_syslog = config.getboolean('Logger', 'syslog', fallback=True)
 log_file = config.get('Logger', 'file', fallback=None)
+log_stdout = config.getboolean('Logger', 'stdout', fallback=False)
 
 logger = logging.getLogger()
 logger.setLevel(log_level)
@@ -258,50 +279,25 @@ if log_file:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+if log_stdout:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s: %(levelname)s: '
+                                  '%(name)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-def parse_command_line_arguments():
-    """
-    Parse command line arguments of the development server.
 
-    :return: arguments
-    """
+if __name__ == '__main__':
+    #
+    # Flask development server.
+    #
+    import argparse
     parser = argparse.ArgumentParser(description='Command bot using Viber')
     parser.add_argument('--debug', type=bool, default=False, help='debug')
     parser.add_argument('--listen-address', help='server listen address')
     parser.add_argument('--listen-port', type=int, help='server listen port')
-    parser.add_argument('--tls-private-key', help='TLS private key file')
     parser.add_argument('--tls-certificate', help='TLS certificate file')
-    parser.add_argument('--webhook', help='webhook for viber')
-    parser.add_argument('--register', action='store_true', help='register bot')
-    parser.add_argument('--un-register', action='store_true',
-                        help='un-register bot')
-    parser.set_defaults(webhook=config['Viber']['webhook'])
-    return parser.parse_args()
-
-
-if __name__ == '__main__':
-
-    args = parse_command_line_arguments()
-    if args.register:
-        try:
-            print('Registering webhook "{}" ... '.format(args.webhook),
-                  end='', flush=True)
-            viber.set_webhook(args.webhook)
-            print('OK.')
-        except Exception as e:
-            print('\nERROR: Failed to register bot: {}'.format(e))
-            sys.exit(1)
-        sys.exit(0)
-    if args.un_register:
-        try:
-            print('Un-registering webhook ... ', end='', flush=True)
-            viber.unset_webhook()
-            print('OK.')
-        except Exception as e:
-            print('\nERROR: Failed to un-register bot: {}'.format(e))
-            sys.exit(1)
-        sys.exit(0)
-
-    # Start Flask development server.
+    parser.add_argument('--tls-private-key', help='TLS private key file')
+    args = parser.parse_args()
     app.run(host=args.listen_address, port=args.listen_port, debug=args.debug,
             ssl_context=(args.tls_certificate, args.tls_private_key))
