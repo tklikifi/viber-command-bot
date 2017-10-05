@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+
+from viber_command_bot.messages import send_message, MAX_TEXT_SIZE
+
+
+def parse_command_line_arguments():
+    parser = argparse.ArgumentParser(description='Send Viber message to a '
+                                                 'subscribed Viber user. '
+                                                 'The user must be subscribed '
+                                                 'to the bot Viber public '
+                                                 'account')
+    parser.add_argument('--user-id', help='unique Viber user id of a '
+                                          'subscribed user; the default is '
+                                          'the notify user id configured for '
+                                          'the bot')
+    parser.add_argument('--media-url', help='URL of a media file, for example '
+                                            'link to an image')
+    parser.add_argument('message', help='message text to be sent; max {} '
+                                        'characters'.format(MAX_TEXT_SIZE))
+    return parser.parse_args()
+
+
+def main():
+    args = parse_command_line_arguments()
+    try:
+        send_message(args.message, media=args.media_url, user_id=args.user_id)
+    except Exception as e:
+        print('ERROR: Failed to send message: {}'.format(e))
+        return 1
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

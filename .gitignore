@@ -83,6 +83,8 @@ celerybeat-schedule
 .env
 
 # virtualenv
+.virtualenv
+.virtualenvrc
 .venv
 venv/
 ENV/
@@ -99,3 +101,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# IDE
+.idea
+
+# GIT
+viber_command_bot/git.py

@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+from viber_command_bot.viber import config, viber
+
+
+def parse_command_line_arguments():
+    parser = argparse.ArgumentParser(description='Register Viber bot webhook')
+    parser.add_argument('--un-register', action='store_true',
+                        help='un-register bot webhook')
+    parser.add_argument('--webhook', help='webhook for viber')
+    parser.set_defaults(webhook=config.get('Viber', 'webhook'))
+    return parser.parse_args()
+
+
+def main():
+    args = parse_command_line_arguments()
+
+    if args.un_register:
+        print('Un-registering webhook "{}" ... '.format(args.webhook), end='',
+              flush=True)
+        try:
+            viber.unset_webhook()
+        except Exception as e:
+            print('\nERROR: Failed to un-register bot: {}'.format(e))
+            return 1
+    else:
+        print('Registering webhook "{}" ... '.format(args.webhook), end='',
+              flush=True)
+        try:
+            viber.set_webhook(args.webhook)
+        except Exception as e:
+            print('\nERROR: Failed to register bot: {}'.format(e))
+            return 1
+    print('OK.')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
