@@ -3,7 +3,7 @@
 #
 
 [Unit]
-Description=uWSGI instance for Viber command bot
+Description=Systemd service for Viber command bot
 After=network.target
 
 [Service]
