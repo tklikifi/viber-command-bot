@@ -2,7 +2,8 @@
 Utility functions for Viber bot messages
 """
 
-from viber_command_bot.viber import config, viber
+from viber_command_bot.cache import cache
+from viber_command_bot.viber import viber
 from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
 
@@ -32,19 +33,18 @@ def create_text_message_list(text):
     return messages
 
 
-def send_message(text, media=None, user_id=None):
+def send_message(user_id, text, media=None):
     """
     Send text message.
 
+    :param user_id: viber user id who will receive the message
     :param text: text to send
     :param media: URL to media file
-    :param user_id: viber user id who will receive the message
     :return: None
     :raises Exception: if message sending fails
     """
+    cache.publish(text, media=media)
     messages = create_text_message_list(text)
     if media is not None:
         messages.append(URLMessage(media=media))
-    if user_id is None:
-        user_id = config.get('Viber', 'notify_user_id')
     viber.send_messages(user_id, messages)

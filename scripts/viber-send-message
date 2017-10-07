@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from viber_command_bot.messages import send_message, MAX_TEXT_SIZE
+from viber_command_bot.viber import config
 
 
 def parse_command_line_arguments():
@@ -20,13 +21,14 @@ def parse_command_line_arguments():
                                             'link to an image')
     parser.add_argument('message', help='message text to be sent; max {} '
                                         'characters'.format(MAX_TEXT_SIZE))
+    parser.set_defaults(user_id=config.get('Viber', 'notify_user_id'))
     return parser.parse_args()
 
 
 def main():
     args = parse_command_line_arguments()
     try:
-        send_message(args.message, media=args.media_url, user_id=args.user_id)
+        send_message(args.user_id, args.message, media=args.media_url)
     except Exception as e:
         print('ERROR: Failed to send message: {}'.format(e))
         return 1

@@ -11,8 +11,6 @@ import threading
 from logging.handlers import SysLogHandler
 
 from flask import Flask, request, Response
-from viberbot.api.messages import URLMessage
-from viberbot.api.messages.text_message import TextMessage
 from viberbot.api.viber_requests import ViberConversationStartedRequest
 from viberbot.api.viber_requests import ViberFailedRequest
 from viberbot.api.viber_requests import ViberMessageRequest
@@ -20,7 +18,8 @@ from viberbot.api.viber_requests import ViberSubscribedRequest
 from viberbot.api.viber_requests import ViberUnsubscribedRequest
 
 from viber_command_bot.info import info
-from viber_command_bot.messages import create_text_message_list
+from viber_command_bot.messages import send_message
+from viber_command_bot.cache import cache
 from viber_command_bot.viber import config, viber
 
 
@@ -47,10 +46,10 @@ def bot_request():
     viber_request = viber.parse_request(request.get_data())
 
     if isinstance(viber_request, ViberConversationStartedRequest):
-        viber.send_messages(viber_request.user.id,
-                            [TextMessage(text='Hello, {}!\n\n{}'.format(
-                                viber_request.user.name,
-                                command_help()))])
+        cache.started(viber_request.user.id, viber_request.user.name)
+        send_message(viber_request.user.id,
+                     'Hello, {}!\n\n{}'.format(
+                         viber_request.user.name, command_help()))
     elif isinstance(viber_request, ViberMessageRequest):
         if not check_user_id(viber_request):
             return Response(status=403)
@@ -58,12 +57,13 @@ def bot_request():
     elif isinstance(viber_request, ViberSubscribedRequest):
         logger.info('User "{}" subscribed as user id "{}"'.format(
             viber_request.user.name, viber_request.user.id))
-        viber.send_messages(viber_request.user.id,
-                            [TextMessage(text='Hello, {}!\n\n{}'.format(
-                                viber_request.user.name,
-                                command_help()))])
+        cache.subscribe(viber_request.user.id, viber_request.user.name)
+        send_message(viber_request.user.id,
+                     'Hello, {}!\n\n{}'.format(
+                         viber_request.user.name, command_help()))
     elif isinstance(viber_request, ViberUnsubscribedRequest):
         logger.info('User id "{}" un-subscribed'.format(viber_request.user_id))
+        cache.unsubscribe(viber_request.user_id)
     elif isinstance(viber_request, ViberFailedRequest):
         logger.warning('Client failed receiving message, failure: '
                        '{0}'.format(viber_request))
@@ -85,8 +85,7 @@ def check_user_id(viber_request):
                 '{}'.format(viber_request.sender.name, viber_request.sender.id,
                             viber_request.message.text))
         logger.warning(text)
-        viber.send_messages(config.get('Viber', 'notify_user_id'),
-                            create_text_message_list(text))
+        send_message(config.get('Viber', 'notify_user_id'), text)
         return False
     logger.info('Received message from trusted user "{}" (user id "{}"): '
                 '{}'.format(viber_request.sender.name, viber_request.sender.id,
@@ -103,11 +102,10 @@ def handle_viber_request(viber_request):
     :raises Exception: if message sending fails
     """
     text = viber_request.message.text.strip()
+    cache.refresh(viber_request.sender.id, viber_request.sender.name)
+    cache.publish(text, name=viber_request.sender.name)
     if text.startswith('/'):
-        execute_command(viber_request, text[1:])
-    else:
-        text = 'You did not send a command, try "/help".'
-        viber.send_messages(viber_request.sender.id, [TextMessage(text=text)])
+        execute_command(viber_request, text[len('/'):].strip())
 
 
 def execute_command(viber_request, command):
@@ -121,37 +119,34 @@ def execute_command(viber_request, command):
     """
     logger.info('Received command "{}" from user "{}"'.format(
         command, viber_request.sender.name))
-    if command == 'version':
-        viber.send_messages(viber_request.sender.id, [TextMessage(text=info)])
-    elif command == 'help':
-        viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text=command_help())])
+    if not command or command == 'help':
+        send_message(viber_request.sender.id, command_help())
+    elif command == 'version':
+        send_message(viber_request.sender.id, info)
     elif command == 'echo':
-        viber.send_messages(viber_request.sender.id, [TextMessage(text=':-)')])
+        send_message(viber_request.sender.id, ':-)')
     elif command.startswith('echo '):
-        messages = create_text_message_list(command[len('echo '):])
-        viber.send_messages(viber_request.sender.id, messages)
+        send_message(viber_request.sender.id, command[len('echo '):])
     elif command not in bot_commands:
         logger.warning('Un-supported command "{}" from user "{}"'.format(
             command, viber_request.sender.name))
-        viber.send_messages(
-            viber_request.sender.id,
-            [TextMessage(text='Command "{}" is not supported, '
-                              'try "/help".'.format(command))])
+        send_message(viber_request.sender.id,
+                     'Command "{}" is not supported, '
+                     'try "/help".'.format(command))
     elif 'execute' not in bot_commands[command]:
         logger.error('Execute parameter is not configured for command '
                      '"{}"'.format(command))
-        viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text='Command "{}" is not properly '
-                                              'configured.'.format(command))])
+        send_message(viber_request.sender.id,
+                     'Command "{}" is not properly '
+                     'configured.'.format(command))
     elif bot_commands[command].get('output_format', 'text') not in [
             'text', 'json']:
         logger.error('Output format parameter is not properly configured for '
                      'command "{}" ("{}" should be "text" or "json")'.format(
                         command, bot_commands[command].get('output_format')))
-        viber.send_messages(viber_request.sender.id,
-                            [TextMessage(text='Command "{}" is not properly '
-                                              'configured.'.format(command))])
+        send_message(viber_request.sender.id,
+                     'Command "{}" is not properly '
+                     'configured.'.format(command))
     else:
         # Viber bot API expects responses to be quick. The local command
         # might take longer that allowed, so execute them in another thread.
@@ -174,15 +169,16 @@ def command_help():
                      bot_commands.keys())
     help_dict['echo'] = 'Echo the text sent to the bot (internal command).'
     help_dict['version'] = 'Show information about the bot (internal command).'
+    width = max(len(k) for k in help_dict.keys())
     text = 'Available commands:\n\n'
     for k, v in sorted(help_dict.items()):
-        text += '/' + k + ' -- '
+        text += '/{:<{width}} -- '.format(k, width=width)
         if v is not None:
             text += v
         else:
             text += 'Help is not available for command "{}".'.format(k)
         text += '\n'
-    return text
+    return text.strip()
 
 
 def command_thread_target(execute, output_format, user_id):
@@ -197,10 +193,7 @@ def command_thread_target(execute, output_format, user_id):
     :raises Exception: if message sending fails
     """
     text, media = execute_local_command(execute, output_format)
-    messages = create_text_message_list(text)
-    if media:
-        messages.append(URLMessage(media=media))
-    viber.send_messages(user_id, messages)
+    send_message(user_id, text, media=media)
 
 
 def execute_local_command(execute, output_format=None):
