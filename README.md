@@ -68,8 +68,9 @@ following options in *Viber* configuration block:
 - **avatar** - image URL for bot avatar
 - **webhook** - webhook URL of the bot
 - **notify_user_id** - user id who receives notifications from the bot
-- **trusted_user_ids** -  list of user ids that are allowed to send messages
+- **trusted_user_ids** - list of user ids that are allowed to send messages
   to the bot
+- **redis_channel** - channel used as message cache in Redis
 
 Also, add the commands you want the bot to execute.
 
@@ -108,3 +109,11 @@ If no *user-id* is given, the configured *notify_user_id* is used.
 User account that wants to send Viber messages must belong to *viber* group:
 
     $ sudo usermod -a -G viber user
+
+
+## Receive Viber messages
+
+A small Python script *viber-receive-messages* can be used for following message
+to and from the bot:
+
+    $ viber-receive-messages
