@@ -43,6 +43,8 @@ def send_message(user_id, text, media=None):
     :return: None
     :raises Exception: if message sending fails
     """
+    if not text:
+        return
     cache.publish(text, media=media)
     messages = create_text_message_list(text)
     if media is not None:

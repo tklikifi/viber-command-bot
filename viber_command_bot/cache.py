@@ -6,6 +6,7 @@ import datetime
 import pickle
 import redis
 import redis.exceptions
+import time
 from viber_command_bot.viber import config
 
 
@@ -41,7 +42,7 @@ class Cache(object):
             raise CacheError('Could not subscribe to Redis channel "{}": '
                              '{}'.format(self.channel, e))
 
-    def subscribe(self, user_id, name):
+    def subscribe_user(self, user_id, name):
         """
         User is subscribed to the cache.
 
@@ -54,7 +55,7 @@ class Cache(object):
         self.redis.set('viber-user-id:{}'.format(user_id), name)
         self.publish('Subscribe "{}": {}'.format(name, user_id), name=name)
 
-    def started(self, user_id, name):
+    def conversation_started(self, user_id, name):
         """
         User conversation is started.
 
@@ -67,7 +68,7 @@ class Cache(object):
         self.redis.set('viber-user-id:{}'.format(user_id), name)
         self.publish('Conversation started: {}'.format(user_id), name=name)
 
-    def refresh(self, user_id, name):
+    def refresh_user(self, user_id, name):
         """
         User is refreshed in the cache.
 
@@ -79,7 +80,7 @@ class Cache(object):
             return
         self.redis.set('viber-user-id:{}'.format(user_id), name)
 
-    def unsubscribe(self, user_id):
+    def unsubscribe_user(self, user_id):
         """
         User is un-subscribed from the cache.
 
@@ -127,6 +128,76 @@ class Cache(object):
         if message:
             return pickle.loads(message.get('data', dict()))
         return dict()
+
+    def add_note(self, text):
+        """
+        Add note to cache.
+
+        :param text: text to be copied
+        :return: None
+        """
+        if self.redis is None or self.channel is None:
+            return
+        name = int(time.time() * 1000000)
+        self.redis.set('viber-note:{}'.format(name), text)
+
+    def show_note(self, number=-1):
+        """
+        Show note from cache.
+
+        :param number: note number, 0 is first, 1 is second and so on
+        :return: text found in the cache, or empty string
+        """
+        if self.redis is None or self.channel is None:
+            return ''
+        notes = sorted(self.redis.scan_iter('viber-note:*'))
+        try:
+            text = self.redis.get(notes[number])
+        except IndexError:
+            return ''
+        if text:
+            return text.decode()
+        return ''
+
+    def show_all_notes(self):
+        """
+        Show all notes from cache.
+
+        :return: dict with texts found in the cache, or empty dict
+        """
+        if self.redis is None or self.channel is None:
+            return dict()
+        texts = dict()
+        for i, key in enumerate(sorted(self.redis.scan_iter(
+                'viber-note:*')), start=1):
+            texts[i] = self.redis.get(key).decode()
+        return texts
+
+    def remove_note(self, number=-1):
+        """
+        Remove note from cache.
+
+        :param number: note number, 0 is first, 1 is second and so on
+        :return: None
+        """
+        if self.redis is None or self.channel is None:
+            return
+        notes = sorted(self.redis.scan_iter('viber-note:*'))
+        try:
+            self.redis.delete(notes[number])
+        except IndexError:
+            pass
+
+    def remove_all_notes(self):
+        """
+        Clear all texts from cache.
+
+        :return: None
+        """
+        if self.redis is None or self.channel is None:
+            return
+        for key in self.redis.scan_iter('viber-note:*'):
+            self.redis.delete(key)
 
 
 cache = Cache()

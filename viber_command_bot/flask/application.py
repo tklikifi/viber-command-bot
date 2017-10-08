@@ -6,6 +6,7 @@ Viber command bot Flask application
 
 import json
 import logging
+import re
 import subprocess
 import threading
 from logging.handlers import SysLogHandler
@@ -21,6 +22,10 @@ from viber_command_bot.info import info
 from viber_command_bot.messages import send_message
 from viber_command_bot.cache import cache
 from viber_command_bot.viber import config, viber
+
+
+NOTE = re.compile('^note(?P<n>\d+)$')
+REMOVENOTE = re.compile('^removenote(?P<n>\d+)$')
 
 
 app = Flask(__name__)
@@ -46,7 +51,8 @@ def bot_request():
     viber_request = viber.parse_request(request.get_data())
 
     if isinstance(viber_request, ViberConversationStartedRequest):
-        cache.started(viber_request.user.id, viber_request.user.name)
+        cache.conversation_started(viber_request.user.id,
+                                   viber_request.user.name)
         send_message(viber_request.user.id,
                      'Hello, {}!\n\n{}'.format(
                          viber_request.user.name, command_help()))
@@ -57,13 +63,13 @@ def bot_request():
     elif isinstance(viber_request, ViberSubscribedRequest):
         logger.info('User "{}" subscribed as user id "{}"'.format(
             viber_request.user.name, viber_request.user.id))
-        cache.subscribe(viber_request.user.id, viber_request.user.name)
+        cache.subscribe_user(viber_request.user.id, viber_request.user.name)
         send_message(viber_request.user.id,
                      'Hello, {}!\n\n{}'.format(
                          viber_request.user.name, command_help()))
     elif isinstance(viber_request, ViberUnsubscribedRequest):
         logger.info('User id "{}" un-subscribed'.format(viber_request.user_id))
-        cache.unsubscribe(viber_request.user_id)
+        cache.unsubscribe_user(viber_request.user_id)
     elif isinstance(viber_request, ViberFailedRequest):
         logger.warning('Client failed receiving message, failure: '
                        '{0}'.format(viber_request))
@@ -102,7 +108,7 @@ def handle_viber_request(viber_request):
     :raises Exception: if message sending fails
     """
     text = viber_request.message.text.strip()
-    cache.refresh(viber_request.sender.id, viber_request.sender.name)
+    cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
     cache.publish(text, name=viber_request.sender.name)
     if text.startswith('/'):
         execute_command(viber_request, text[len('/'):].strip())
@@ -127,6 +133,36 @@ def execute_command(viber_request, command):
         send_message(viber_request.sender.id, ':-)')
     elif command.startswith('echo '):
         send_message(viber_request.sender.id, command[len('echo '):])
+    elif command.startswith('note '):
+        cache.add_note(command[len('note '):].strip())
+    elif command == 'note':
+        send_message(viber_request.sender.id, cache.show_note(number=-1))
+    elif command == 'notes':
+        text = ''
+        for k, v in sorted(cache.show_all_notes().items()):
+            text += '{}: {}\n'.format(k, v)
+        send_message(viber_request.sender.id, text.strip())
+    elif command.startswith('note'):
+        m = NOTE.match(command)
+        if m:
+            send_message(viber_request.sender.id,
+                         cache.show_note(number=int(m.group('n')) - 1))
+        else:
+            send_message(viber_request.sender.id,
+                         'Invalid "note" command, use "note" or "noteN", '
+                         'where "N" is an integer.')
+    elif command == 'removenotes':
+        cache.remove_all_notes()
+    elif command == 'removenote':
+        cache.remove_note(number=-1)
+    elif command.startswith('removenote'):
+        m = REMOVENOTE.match(command)
+        if m:
+            cache.remove_note(number=int(m.group('n') - 1))
+        else:
+            send_message(viber_request.sender.id,
+                         'Invalid "removenote" command, use "removenote" or '
+                         '"removenoteN", where "N" is an integer.')
     elif command not in bot_commands:
         logger.warning('Un-supported command "{}" from user "{}"'.format(
             command, viber_request.sender.name))
@@ -169,6 +205,12 @@ def command_help():
                      bot_commands.keys())
     help_dict['echo'] = 'Echo the text sent to the bot (internal command).'
     help_dict['version'] = 'Show information about the bot (internal command).'
+    help_dict['note'] = 'Create note or show the last note (internal command).'
+    help_dict['notes'] = 'Show all notes (internal command).'
+    help_dict['noteN'] = 'Show the Nth note (internal command).'
+    help_dict['removenote'] = 'Remove the last note (internal command).'
+    help_dict['removenoteN'] = 'Remove the Nth note (internal command).'
+    help_dict['removenotes'] = 'Remove all notes (internal command).'
     width = max(len(k) for k in help_dict.keys())
     text = 'Available commands:\n\n'
     for k, v in sorted(help_dict.items()):
