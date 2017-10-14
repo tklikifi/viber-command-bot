@@ -11,6 +11,10 @@ User=viber
 Group=nginx
 Environment="PATH=/usr/local/bin:/usr/bin:/bin:"
 Environment="VIBER_CONF=/etc/viber/viber-command-bot.conf"
+PermissionsStartOnly=true
+ExecStartPre=-/usr/bin/mkdir /var/run/viber
+ExecStartPre=/usr/bin/chown viber:nginx /var/run/viber
+ExecStartPre=/usr/bin/chmod 750 /var/run/viber
 ExecStart=/usr/sbin/uwsgi --ini /etc/viber/viber-command-bot.ini
 
 [Install]
