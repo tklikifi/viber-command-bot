@@ -8,14 +8,14 @@ After=network.target
 
 [Service]
 User=viber
-Group=nginx
-Environment="PATH=/usr/local/bin:/usr/bin:/bin:"
+Group=www-data
+Environment="PATH=/usr/local/bin:/usr/bin:/bin:/usr/games"
 Environment="VIBER_CONF=/etc/viber/viber-command-bot.conf"
 PermissionsStartOnly=true
-ExecStartPre=-/usr/bin/mkdir /var/run/viber
-ExecStartPre=/usr/bin/chown viber:nginx /var/run/viber
-ExecStartPre=/usr/bin/chmod 750 /var/run/viber
-ExecStart=/usr/sbin/uwsgi --ini /etc/viber/viber-command-bot.ini
+ExecStartPre=-/bin/mkdir /var/run/viber
+ExecStartPre=/bin/chown viber:www-data /var/run/viber
+ExecStartPre=/bin/chmod 750 /var/run/viber
+ExecStart=/usr/bin/uwsgi --ini /etc/viber/viber-command-bot.ini
 
 [Install]
 WantedBy=multi-user.target
