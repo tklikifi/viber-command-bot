@@ -64,6 +64,8 @@ class InstallCommand(install):
                 gid = 0
 
         log.info('setting viber command bot file permissions')
+        if not os.path.exists('/etc/viber'):
+            os.mkdir('/etc/viber')
         os.chown('/etc/viber', uid, gid)
         os.chmod('/etc/viber', 0o750)
         os.chown('/etc/viber/viber-command-bot.conf', uid, gid)
@@ -85,6 +87,7 @@ setup(name='viber_command_bot',
                         'requests', 'urllib3', 'viberbot', 'Werkzeug', ],
       packages=['viber_command_bot', 'viber_command_bot.flask', ],
       scripts=['scripts/viber-command-bot-register',
+               'scripts/viber-receive-message',
                'scripts/viber-send-message'],
       data_files=[('/etc/viber',
                    ['config/viber-command-bot.conf',

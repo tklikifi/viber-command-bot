@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import sys
+import time
+
+from viber_command_bot.cache import cache, CacheError
+from viber_command_bot.viber import config
+
+
+def main():
+
+    if not config.get('Viber', 'redis_channel'):
+        print('FATAL: Redis channel is not configured')
+        return 1
+
+    try:
+        cache.listen()
+        print('Waiting for messages...\n')
+        while True:
+            message = cache.get_message()
+            show_message(message)
+            time.sleep(0.01)
+    except CacheError as e:
+        print('FATAL: {}'.format(e))
+        return 1
+    except KeyboardInterrupt:
+        print('Exiting...')
+
+    return 0
+
+
+def show_message(message):
+    if not message:
+        return
+    print('[{date}] Message from {name}:\n{text}'.format(**message))
+    if message.get('media'):
+        print('{}'.format(message.get('media')))
+    print()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
