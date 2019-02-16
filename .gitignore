@@ -107,3 +107,7 @@ ENV/
 
 # GIT
 viber_command_bot/git.py
+
+# Test files
+install.sh
+config/viber-command-bot.conf.*

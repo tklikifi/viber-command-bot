@@ -14,41 +14,45 @@ Check API documentation about how to setup bot accounts.
 
 ## Viber command bot
 
-Directory *viber_command_bot* contains a simple Viber bot that receives commands
-from a trusted Viber user. Bot executes the configured command and returns the
-answer. As a security measure, the bot will not use any information received
-from the user as input to the commands.
+Repository [viber-command-bot](https://github.com/tklikifi/viber-command-bot)
+contains a simple Viber bot that receives commands from a trusted Viber user.
+Bot executes the configured command and returns the answer. As a security
+measure, the bot will not use any information received from the user as input to
+the commands.
 
-### Install
+### Installation
 
-The current implementation is tested in **CentOS 7.4** with **Python 3.4**.
-First, install Python 3 and uWSGI packages.
+The current implementation is tested in **Ubuntu 18.04** with **Python 3.6**.
+First, install Python 3, nginx and uWSGI packages. Also, *redis* is needed for
+cache:
 
 ```sh
-sudo yum -y install python34 python34-libs python34-setuptools python34-pip
-sudo yum -y install uwsgi uwsgi-plugin-python3
+sudo apt -y install python3 python3-setuptools python3-pip
+sudo apt -y install nginx uwsgi uwsgi-plugin-python3
+sudo apt -y install redis python3-redis
 ```
 
-At the moment the original *viberbot* package
-[viber-bot-python](https://github.com/Viber/viber-bot-python) does not work with
-Python 3.4 and Flask (it does work with Python 3.6 and Flask), so it is necessary
-to install fixed package:
+Install *viber-bot-python*:
 
 ```sh
 pushd /tmp
-git clone https://github.com/tklikifi/viber-bot-python.git
+git clone https://github.com/Viber/viber-bot-python.git
 cd viber-bot-python
 python3 ./setup.py build
 sudo python3 ./setup.py install
 popd
 ```
 
-Install bot:
+Install *viber-command-bot*:
 
 ```sh
+pushd /tmp
+git clone https://github.com/tklikifi/viber-command-bot.git
+cd viber-command-bot
 sudo pip3 install -r requirements.txt
 python3 ./setup.py build
 sudo python3 ./setup.py install
+popd
 ```
 
 ``sudo python3 ./setup.py install`` command will do the following:
