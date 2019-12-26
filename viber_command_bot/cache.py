@@ -113,7 +113,7 @@ class Cache(object):
             name = self.name
         message = pickle.dumps({'user_id': user_id, 'text': text,
                                 'media': media, 'name': name,
-                                'data_type': data_type,
+                                'message_type': message_type,
                                 'output_format': output_format,
                                 'date': datetime.datetime.now()})
         try:
