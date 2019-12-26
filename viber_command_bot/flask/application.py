@@ -110,7 +110,8 @@ def handle_viber_request(viber_request):
     """
     text = viber_request.message.text.strip()
     cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
-    cache.publish(text, name=viber_request.sender.name)
+    cache.publish(viber_request.sender.id, text,
+                  name=viber_request.sender.name)
     if text.startswith('/'):
         execute_command(viber_request, text[len('/'):].strip())
 
