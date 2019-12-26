@@ -198,7 +198,7 @@ def execute_command(viber_request, command):
         # might take longer that allowed, so execute them in another thread.
         # The answer is sent when the command is ready.
         command_thread = threading.Thread(
-            target=execute_command,
+            target=command_thread_target,
             args=(bot_commands[command].get('execute'),
                   bot_commands[command].get('output_format', 'text'),
                   viber_request.sender.id,))
@@ -233,24 +233,24 @@ def command_help():
     return text.strip()
 
 
-def execute_command(execute, output_format, user_id):
+def command_thread_target(execute, output_format, user_id):
     """
-    Execute command
+    Local command is run in a separate thread.
 
-    :param execute: command to execute
+    :param execute: local command to execute
     :param output_format: expected command output format specified in the bot
                           configuration
     :param user_id: user id who will receive the answer
     :return: None
     :raises Exception: if message sending fails
     """
-    text, media = _execute_command(execute, output_format)
+    text, media = execute_local_command(execute, output_format)
     send_message(user_id, text, media=media)
 
 
-def _execute_command(execute, output_format=None):
+def execute_local_command(execute, output_format=None):
     """
-    Execute command in another process.
+    Execute local command in another process.
 
     :param execute: command found
     :param output_format:

@@ -6,7 +6,7 @@ import time
 from viber_command_bot.cache import cache, CacheError
 from viber_command_bot.config import config
 from viber_command_bot.messages import send_message
-from viber_command_bot.flask.application import execute_command
+from viber_command_bot.flask.application import command_thread_target
 
 
 def main():
@@ -21,9 +21,9 @@ def main():
         while True:
             message = cache.get_message()
             if message.get('message_type') == 'execute':
-                execute_command(message.get('text'),
-                                message.get('output_format'),
-                                message.get('user_id'))
+                command_thread_target(message.get('text'),
+                                      message.get('output_format'),
+                                      message.get('user_id'))
             else:
                 show_message(message)
             time.sleep(0.01)
