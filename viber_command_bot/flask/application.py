@@ -21,7 +21,8 @@ from viberbot.api.viber_requests import ViberUnsubscribedRequest
 from viber_command_bot.info import info
 from viber_command_bot.messages import send_message
 from viber_command_bot.cache import cache
-from viber_command_bot.viber import config, viber
+from viber_command_bot.config import config
+from viber_command_bot.viber import viber
 
 
 NOTE = re.compile('^note(?P<n>\d+)$')
@@ -109,7 +110,8 @@ def handle_viber_request(viber_request):
     """
     text = viber_request.message.text.strip()
     cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
-    cache.publish(text, name=viber_request.sender.name)
+    cache.publish(viber_request.sender.id, text,
+                  name=viber_request.sender.name)
     if text.startswith('/'):
         execute_command(viber_request, text[len('/'):].strip())
 
@@ -183,6 +185,16 @@ def execute_command(viber_request, command):
         send_message(viber_request.sender.id,
                      'Command "{}" is not properly '
                      'configured.'.format(command))
+    elif config.getboolean('Viber', 'command_executor', fallback=False):
+        # There is another daemon that handles the messages. Just publish
+        # the message.
+        cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
+        cache.publish(viber_request.sender.id,
+                      bot_commands[command].get('execute'),
+                      name=viber_request.sender.name,
+                      message_type='execute',
+                      output_format=bot_commands[command].get(
+                          'output_format', 'text'))
     else:
         # Viber bot API expects responses to be quick. The local command
         # might take longer that allowed, so execute them in another thread.
@@ -246,14 +258,16 @@ def execute_local_command(execute, output_format=None):
     :param output_format:
     :return: (message text, optional media url)
     """
-    logger.debug('Running command "{}"'.format(execute))
+    logger.info('Running command "{}"'.format(execute))
     p = subprocess.Popen(execute, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
     output, error = p.communicate()
     rc = p.returncode
     if rc != 0:
-        return 'Failed to execute command "{}": {}'.format(
-            execute, output.decode().strip()), None
+        error_msg = 'Failed to execute command "{}": {}'.format(
+            execute, error.decode().strip())
+        logger.error(error_msg)
+        return error_msg, None
     if output_format == 'json':
         try:
             message = json.loads(output.decode().strip())
