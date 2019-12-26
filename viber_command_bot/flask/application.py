@@ -21,7 +21,8 @@ from viberbot.api.viber_requests import ViberUnsubscribedRequest
 from viber_command_bot.info import info
 from viber_command_bot.messages import send_message
 from viber_command_bot.cache import cache
-from viber_command_bot.viber import config, viber
+from viber_command_bot.config import config
+from viber_command_bot.viber import viber
 
 
 NOTE = re.compile('^note(?P<n>\d+)$')

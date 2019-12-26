@@ -4,6 +4,7 @@ Viber bot configuration parsing
 
 import configparser
 import os
+import sys
 
 
 class ParseError(Exception):
@@ -35,3 +36,14 @@ def parse(file_path):
             raise ParseError('Viber "{}" is not configured'.format(k))
 
     return config
+
+
+VIBER_CONF = '/etc/viber/viber-command-bot.conf'
+
+
+try:
+    config = parse(os.getenv('VIBER_CONF', VIBER_CONF))
+except ParseError as e:
+    # Configuration parsing error is fatal.
+    print('FATAL: {}'.format(e))
+    sys.exit(1)

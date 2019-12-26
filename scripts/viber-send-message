@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from viber_command_bot.messages import send_message, MAX_TEXT_SIZE
-from viber_command_bot.viber import config
+from viber_command_bot.config import config
 
 
 def parse_command_line_arguments():
