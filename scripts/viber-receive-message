@@ -26,7 +26,6 @@ def main():
                                       message.get('user_id'))
             else:
                 show_message(message)
-            time.sleep(0.01)
     except CacheError as e:
         print('FATAL: {}'.format(e))
         return 1

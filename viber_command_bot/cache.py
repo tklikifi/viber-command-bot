@@ -130,7 +130,7 @@ class Cache(object):
         if self.redis is None or self.channel is None:
             return dict()
         try:
-            message = self.pubsub.get_message()
+            message = self.pubsub.get_message(timeout=10)
         except Exception as e:
             raise CacheError('Could not get message from cache: {}'.format(e))
         if message:
