@@ -54,7 +54,8 @@ class Cache(object):
         if self.redis is None or self.channel is None:
             return
         self.redis.set('viber-user-id:{}'.format(user_id), name)
-        self.publish('Subscribe "{}": {}'.format(name, user_id), name=name)
+        self.publish(user_id, 'Subscribe "{}": {}'.format(name, user_id),
+                     name=name)
 
     def conversation_started(self, user_id, name):
         """
@@ -67,7 +68,8 @@ class Cache(object):
         if self.redis is None or self.channel is None:
             return
         self.redis.set('viber-user-id:{}'.format(user_id), name)
-        self.publish('Conversation started: {}'.format(user_id), name=name)
+        self.publish(user_id, 'Conversation started: {}'.format(user_id),
+                     name=name)
 
     def refresh_user(self, user_id, name):
         """
@@ -92,7 +94,8 @@ class Cache(object):
             return
         name = self.redis.get('viber-user-id:{}'.format(user_id)).decode()
         self.redis.delete('viber-user-id:{}'.format(user_id))
-        self.publish('Un-subscribe "{}": {}'.format(name, user_id), name=name)
+        self.publish(user_id, 'Un-subscribe "{}": {}'.format(name, user_id),
+                     name=name)
 
     def publish(self, user_id, text, media=None, name=None,
                 message_type='text', output_format='text'):
