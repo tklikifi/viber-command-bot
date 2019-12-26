@@ -7,7 +7,7 @@ import pickle
 import redis
 import redis.exceptions
 import time
-from viber_command_bot.viber import config
+from viber_command_bot.config import config
 
 
 class CacheError(Exception):
