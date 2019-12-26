@@ -19,7 +19,12 @@ def main():
         print('Waiting for messages...\n')
         while True:
             message = cache.get_message()
-            show_message(message)
+            if message.get('message_type') == 'execute':
+                send_message(message.get('user_id'),
+                             'Received command: {text} '
+                             '({output_format})'.format(**message))
+            else:
+                show_message(message)
             time.sleep(0.01)
     except CacheError as e:
         print('FATAL: {}'.format(e))
@@ -37,8 +42,6 @@ def show_message(message):
     if message.get('media'):
         print('{}'.format(message.get('media')))
     print()
-    send_message(message.get('user_id'),
-                 'Got message: {text}'.format(**message))
 
 
 if __name__ == '__main__':

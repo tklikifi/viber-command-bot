@@ -185,7 +185,15 @@ def execute_command(viber_request, command):
         send_message(viber_request.sender.id,
                      'Command "{}" is not properly '
                      'configured.'.format(command))
-    elif not config.getboolean('Viber', 'external_responder', fallback=False):
+    elif config.getboolean('Viber', 'external_responder', fallback=False):
+        cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
+        cache.publish(viber_request.sender.id,
+                      bot_commands[command].get('execute'),
+                      name=viber_request.sender.name,
+                      message_type='execute',
+                      output_format=bot_commands[command].get(
+                          'output_format', 'text'))
+    else:
         # Viber bot API expects responses to be quick. The local command
         # might take longer that allowed, so execute them in another thread.
         # The answer is sent when the command is ready.

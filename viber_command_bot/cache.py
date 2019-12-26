@@ -94,7 +94,8 @@ class Cache(object):
         self.redis.delete('viber-user-id:{}'.format(user_id))
         self.publish('Un-subscribe "{}": {}'.format(name, user_id), name=name)
 
-    def publish(self, user_id, text, media=None, name=None):
+    def publish(self, user_id, text, media=None, name=None,
+                message_type='text', output_format='text'):
         """
         Message is published to the cache.
 
@@ -102,6 +103,8 @@ class Cache(object):
         :param text: message text
         :param media: media URL
         :param name: name of the user who sends the message
+        :param message_type: text | execute
+        :param output_format: text | json
         :return: None
         """
         if self.redis is None or self.channel is None:
@@ -110,6 +113,8 @@ class Cache(object):
             name = self.name
         message = pickle.dumps({'user_id': user_id, 'text': text,
                                 'media': media, 'name': name,
+                                'data_type': data_type,
+                                'output_format': output_format,
                                 'date': datetime.datetime.now()})
         try:
             self.redis.publish(self.channel, message)
