@@ -3,6 +3,7 @@ Utility functions for Viber bot messages
 """
 
 from viber_command_bot.cache import cache
+from viber_command_bot.config import config
 from viber_command_bot.viber import viber
 from viberbot.api.messages import URLMessage
 from viberbot.api.messages.text_message import TextMessage
@@ -45,7 +46,8 @@ def send_message(user_id, text, media=None):
     """
     if not text:
         return
-    cache.publish(user_id, text, media=media)
+    if not config.getboolean('Viber', 'external_responder', fallback=False):
+        cache.publish(user_id, text, media=media)
     messages = create_text_message_list(text)
     if media is not None:
         messages.append(URLMessage(media=media))
