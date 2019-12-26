@@ -20,7 +20,8 @@ class Cache(object):
     """
 
     def __init__(self):
-        self.redis = redis.StrictRedis()
+        self.redis = redis.StrictRedis(
+            config.get('Viber', 'redis_host', fallback='localhost'))
         self.channel = config.get('Viber', 'redis_channel', fallback=None)
         self.name = config.get('Viber', 'name')
         self.pubsub = None
