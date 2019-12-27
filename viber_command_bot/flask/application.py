@@ -185,7 +185,9 @@ def execute_command(viber_request, command):
         send_message(viber_request.sender.id,
                      'Command "{}" is not properly '
                      'configured.'.format(command))
-    elif config.getboolean('Viber', 'external_responder', fallback=False):
+    elif config.getboolean('Viber', 'receiver_daemon', fallback=False):
+        # There is another daemon that handles the messages. Just publish
+        # the message.
         cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
         cache.publish(viber_request.sender.id,
                       bot_commands[command].get('execute'),

@@ -46,7 +46,8 @@ def send_message(user_id, text, media=None):
     """
     if not text:
         return
-    if not config.getboolean('Viber', 'external_responder', fallback=False):
+    if not config.getboolean('Viber', 'receiver_daemon', fallback=False):
+        # External receiver daemon is not used. Publish the answer message.
         cache.publish(user_id, text, media=media)
     messages = create_text_message_list(text)
     if media is not None:
