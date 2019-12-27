@@ -2,7 +2,8 @@
 
 import argparse
 import sys
-from viber_command_bot.viber import config, viber
+from viber_command_bot.config import config
+from viber_command_bot.viber import viber
 
 
 def parse_command_line_arguments():

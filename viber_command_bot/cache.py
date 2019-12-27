@@ -7,7 +7,7 @@ import pickle
 import redis
 import redis.exceptions
 import time
-from viber_command_bot.viber import config
+from viber_command_bot.config import config
 
 
 class CacheError(Exception):
@@ -54,7 +54,8 @@ class Cache(object):
         if self.redis is None or self.channel is None:
             return
         self.redis.set('viber-user-id:{}'.format(user_id), name)
-        self.publish('Subscribe "{}": {}'.format(name, user_id), name=name)
+        self.publish(user_id, 'Subscribe "{}": {}'.format(name, user_id),
+                     name=name)
 
     def conversation_started(self, user_id, name):
         """
@@ -67,7 +68,8 @@ class Cache(object):
         if self.redis is None or self.channel is None:
             return
         self.redis.set('viber-user-id:{}'.format(user_id), name)
-        self.publish('Conversation started: {}'.format(user_id), name=name)
+        self.publish(user_id, 'Conversation started: {}'.format(user_id),
+                     name=name)
 
     def refresh_user(self, user_id, name):
         """
@@ -92,22 +94,30 @@ class Cache(object):
             return
         name = self.redis.get('viber-user-id:{}'.format(user_id)).decode()
         self.redis.delete('viber-user-id:{}'.format(user_id))
-        self.publish('Un-subscribe "{}": {}'.format(name, user_id), name=name)
+        self.publish(user_id, 'Un-subscribe "{}": {}'.format(name, user_id),
+                     name=name)
 
-    def publish(self, text, media=None, name=None):
+    def publish(self, user_id, text, media=None, name=None,
+                message_type='text', output_format='text'):
         """
         Message is published to the cache.
 
+        :param user_id: Viber bot unique user id
         :param text: message text
         :param media: media URL
         :param name: name of the user who sends the message
+        :param message_type: text | execute
+        :param output_format: text | json
         :return: None
         """
         if self.redis is None or self.channel is None:
             return
         if name is None:
             name = self.name
-        message = pickle.dumps({'text': text, 'media': media, 'name': name,
+        message = pickle.dumps({'user_id': user_id, 'text': text,
+                                'media': media, 'name': name,
+                                'message_type': message_type,
+                                'output_format': output_format,
                                 'date': datetime.datetime.now()})
         try:
             self.redis.publish(self.channel, message)
@@ -123,7 +133,7 @@ class Cache(object):
         if self.redis is None or self.channel is None:
             return dict()
         try:
-            message = self.pubsub.get_message()
+            message = self.pubsub.get_message(timeout=10)
         except Exception as e:
             raise CacheError('Could not get message from cache: {}'.format(e))
         if message:
