@@ -256,7 +256,7 @@ def execute_local_command(execute, output_format=None):
     :param output_format:
     :return: (message text, optional media url)
     """
-    logger.debug('Running command "{}"'.format(execute))
+    logger.info('Running command "{}"'.format(execute))
     p = subprocess.Popen(execute, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, shell=True)
     output, error = p.communicate()
