@@ -13,4 +13,3 @@ urllib3
 viberbot
 Werkzeug
 python-daemon
-psutil
