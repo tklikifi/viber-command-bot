@@ -262,8 +262,10 @@ def execute_local_command(execute, output_format=None):
     output, error = p.communicate()
     rc = p.returncode
     if rc != 0:
-        return 'Failed to execute command "{}": {}'.format(
-            execute, output.decode().strip()), None
+        error_msg = 'Failed to execute command "{}": {}'.format(
+            execute, error.decode().strip())
+        logger.error(error_msg)
+        return error_msg, None
     if output_format == 'json':
         try:
             message = json.loads(output.decode().strip())

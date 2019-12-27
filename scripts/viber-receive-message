@@ -15,11 +15,11 @@ def main():
 
     if not config.get('Viber', 'redis_channel'):
         print('FATAL: Redis channel is not configured')
-        sys.exit(1)
+        return 1
 
     try:
         cache.listen()
-        logger.info('Waiting for messages...')
+        logger.info('Receiving viber-bot messages...')
         while True:
             message = cache.get_message()
             if message.get('message_type') == 'execute':
@@ -30,7 +30,7 @@ def main():
                 log_message(message)
     except CacheError as e:
         logger.error('FATAL: {}'.format(e))
-        sys.exit(1)
+        return 1
     except KeyboardInterrupt:
         logger.info('Exiting...')
 
@@ -61,4 +61,4 @@ if __name__ == '__main__':
         handler.setFormatter(formatter)
         logger.addHandler(handler)
     with daemon.DaemonContext(files_preserve=get_logger_handles(logger)):
-        main()
+        sys.exit(main())
