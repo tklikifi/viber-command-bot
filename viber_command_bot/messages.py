@@ -44,8 +44,6 @@ def send_message(user_id, text, media=None):
     :return: None
     :raises Exception: if message sending fails
     """
-    if not text:
-        return
     if not config.getboolean('Viber', 'command_executor', fallback=False):
         # External command executor daemon is not used.
         # Publish the answer message.
