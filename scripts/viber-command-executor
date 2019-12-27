@@ -54,7 +54,7 @@ def get_syslog_handles(logger):
         if type(handler) == logging.handlers.SysLogHandler:
             handles.append(handler.socket.fileno())
     if logger.parent:
-        handles += get_logger_handles(logger.parent)
+        handles += get_syslog_handles(logger.parent)
     return handles
 
 
