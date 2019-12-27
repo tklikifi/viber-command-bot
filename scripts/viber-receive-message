@@ -1,64 +1,13 @@
 #!/usr/bin/env python3
 
-import argparse
-import daemon
 import sys
 import time
 
-from daemon import pidfile
 from viber_command_bot.cache import cache, CacheError
-from viber_command_bot.config import config
-from viber_command_bot.messages import send_message
-from viber_command_bot.flask.application import command_thread_target
-from viber_command_bot.flask.application import logging, logger
+from viber_command_bot.viber import config
 
 
 def main():
-    """
-    Main function for the daemon.
-    """
-    args = parse_command_line_args()
-    if not config.getboolean('Logger', 'syslog', fallback=True):
-        # Syslog is not configured. Add syslog handler for logging.
-        handler = logging.handlers.SysLogHandler(address='/dev/log')
-        formatter = logging.Formatter('viber-bot: %(levelname)s: %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-    # Create daemon.
-    with daemon.DaemonContext(files_preserve=get_syslog_handles(logger),
-                              pidfile=pidfile.TimeoutPIDLockFile(
-                                  args.pid_file)):
-        sys.exit(receive_messages())
-
-
-def parse_command_line_args():
-    """
-    Parse command line arguments.
-    """
-    parser = argparse.ArgumentParser(
-        description='daemon that receives viber-command-bot messages and '
-                    'executes the commands')
-    parser.add_argument('-p', '--pid-file',
-                        help='daemon pid file',
-                        default='/var/run/viber-receive-message.pid')
-    return parser.parse_args()
-
-
-def get_syslog_handles(logger):
-    """
-    Logs are sent to syslog. Get syslog handles so that we do not close
-    them when creating daemon process.
-    """
-    handles = []
-    for handler in logger.handlers:
-        if type(handler) == logging.handlers.SysLogHandler:
-            handles.append(handler.socket.fileno())
-    if logger.parent:
-        handles += get_logger_handles(logger.parent)
-    return handles
-
-
-def receive_messages():
 
     if not config.get('Viber', 'redis_channel'):
         print('FATAL: Redis channel is not configured')
@@ -66,25 +15,27 @@ def receive_messages():
 
     try:
         cache.listen()
-        logger.info('Receiving viber-bot messages...')
+        print('Waiting for messages...\n')
         while True:
             message = cache.get_message()
-            if not message:
-                continue
-            if message.get('message_type') == 'execute':
-                command_thread_target(message.get('text'),
-                                      message.get('output_format'),
-                                      message.get('user_id'))
-            else:
-                logger.info('Message from {name} ({user_id}): {text}'.format(
-                    **message))
+            show_message(message)
+            time.sleep(0.01)
     except CacheError as e:
-        logger.error('FATAL: {}'.format(e))
+        print('FATAL: {}'.format(e))
         return 1
     except KeyboardInterrupt:
-        logger.info('Exiting...')
+        print('Exiting...')
 
     return 0
+
+
+def show_message(message):
+    if not message:
+        return
+    print('[{date}] Message from {name}:\n{text}'.format(**message))
+    if message.get('media'):
+        print('{}'.format(message.get('media')))
+    print()
 
 
 if __name__ == '__main__':
