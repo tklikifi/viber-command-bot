@@ -86,7 +86,7 @@ Add the following lines to */etc/nginx/nginx.conf*:
 
 ```sh
 location = /viber-command-bot { rewrite ^ /viber-command-bot/; }
-location /viber-command-bot { try_files $uri @viber-command-bot; }  
+location /viber-command-bot { try_files $uri @viber-command-bot; }
 location @viber-command-bot {
     include uwsgi_params;
     uwsgi_pass unix:/var/run/viber/viber-command-bot.sock;
@@ -127,4 +127,12 @@ to and from the bot:
 
 ```sh
 viber-receive-messages
+```
+
+Daemon process *viber-command-executor* can be used for executing commands. It
+is useful for example when *redis*, *nginx* and *viber-command-bot* are run in
+separate docker containers.
+
+```sh
+viber-command-executor
 ```
