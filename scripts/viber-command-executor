@@ -28,7 +28,7 @@ def main():
     with daemon.DaemonContext(files_preserve=get_syslog_handles(logger),
                               pidfile=pidfile.TimeoutPIDLockFile(
                                   args.pid_file)):
-        sys.exit(receive_messages())
+        sys.exit(receive_messages(pretext=args.pretext))
 
 
 def parse_command_line_args():
@@ -38,6 +38,8 @@ def parse_command_line_args():
     parser = argparse.ArgumentParser(
         description='daemon that receives viber-command-bot messages and '
                     'executes the commands')
+    parser.add_argument('-t', '--pretext',
+                        help='pretext for the answer message')
     parser.add_argument('-p', '--pid-file',
                         help='daemon pid file',
                         default='/var/run/viber-receive-message.pid')
@@ -58,7 +60,7 @@ def get_syslog_handles(logger):
     return handles
 
 
-def receive_messages():
+def receive_messages(pretext=None):
 
     if not config.get('Viber', 'redis_channel'):
         print('FATAL: Redis channel is not configured')
@@ -74,7 +76,8 @@ def receive_messages():
             if message.get('message_type') == 'execute':
                 command_thread_target(message.get('text'),
                                       message.get('output_format'),
-                                      message.get('user_id'))
+                                      message.get('user_id'),
+                                      pretext=pretext)
             else:
                 logger.info('Message from {name} ({user_id}): {text}'.format(
                     **message))

@@ -235,7 +235,7 @@ def command_help():
     return text.strip()
 
 
-def command_thread_target(execute, output_format, user_id):
+def command_thread_target(execute, output_format, user_id, pretext=None):
     """
     Local command is run in a separate thread.
 
@@ -243,10 +243,13 @@ def command_thread_target(execute, output_format, user_id):
     :param output_format: expected command output format specified in the bot
                           configuration
     :param user_id: user id who will receive the answer
+    :param pretext: text added to the beginning of message
     :return: None
     :raises Exception: if message sending fails
     """
     text, media = execute_local_command(execute, output_format)
+    if isinstance(pretext, str):
+        text = pretext + text
     send_message(user_id, text, media=media)
 
 
