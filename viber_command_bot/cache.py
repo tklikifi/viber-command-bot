@@ -107,7 +107,7 @@ class Cache(object):
         :param media: media URL
         :param name: name of the user who sends the message
         :param message_type: text | execute
-        :param output_format: text | json
+        :param output_format: text | json | none
         :return: None
         """
         if self.redis is None or self.channel is None:

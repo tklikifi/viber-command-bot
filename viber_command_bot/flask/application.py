@@ -248,17 +248,19 @@ def command_thread_target(execute, output_format, user_id, pretext=None):
     :raises Exception: if message sending fails
     """
     text, media = execute_local_command(execute, output_format)
+    if output_format == 'none':
+        return
     if isinstance(pretext, str):
         text = pretext + text
     send_message(user_id, text, media=media)
 
 
-def execute_local_command(execute, output_format=None):
+def execute_local_command(execute, output_format='text'):
     """
     Execute local command in another process.
 
     :param execute: command found
-    :param output_format:
+    :param output_format: text | json | none
     :return: (message text, optional media url)
     """
     logger.info('Running command "{}"'.format(execute))
