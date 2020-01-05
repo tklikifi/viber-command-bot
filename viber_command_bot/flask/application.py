@@ -178,7 +178,7 @@ def execute_command(viber_request, command):
                      'Command "{}" is not properly '
                      'configured.'.format(command))
     elif bot_commands[command].get('output_format', 'text') not in [
-            'text', 'json']:
+            'text', 'json', 'none']:
         logger.error('Output format parameter is not properly configured for '
                      'command "{}" ("{}" should be "text" or "json")'.format(
                         command, bot_commands[command].get('output_format')))
