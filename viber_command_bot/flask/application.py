@@ -128,9 +128,11 @@ def execute_command(viber_request, command):
     """
     destination = list()
     if '@' in command:
-        # Destination is a comma separated list of hosts.
-        command, destination = command.split('@', 1)
-        destination = destination.split(',')
+        # Destination is a comma separated list of hosts. Clean up the list.
+        command, destination_str = command.split('@', 1)
+        command = command.strip()
+        for d in destination_str.strip().split(','):
+            destination.append(d.strip())
     logger.info('Received command "{}" from user "{}"'.format(
         command, viber_request.sender.name))
     if not command or command == 'help':
