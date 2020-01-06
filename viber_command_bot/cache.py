@@ -97,7 +97,7 @@ class Cache(object):
         self.publish(user_id, 'Un-subscribe "{}": {}'.format(name, user_id),
                      name=name)
 
-    def publish(self, user_id, text, media=None, name=None,
+    def publish(self, user_id, text, media=None, destination=None, name=None,
                 message_type='text', output_format='text'):
         """
         Message is published to the cache.
@@ -105,6 +105,7 @@ class Cache(object):
         :param user_id: Viber bot unique user id
         :param text: message text
         :param media: media URL
+        :param destination: destination for the message
         :param name: name of the user who sends the message
         :param message_type: text | execute
         :param output_format: text | json | none
@@ -112,11 +113,14 @@ class Cache(object):
         """
         if self.redis is None or self.channel is None:
             return
+        if destination is None:
+            destination = list()
         if name is None:
             name = self.name
         message = pickle.dumps({'user_id': user_id, 'text': text,
                                 'media': media, 'name': name,
                                 'message_type': message_type,
+                                'destination': destination,
                                 'output_format': output_format,
                                 'date': datetime.datetime.now()})
         try:

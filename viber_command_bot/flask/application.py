@@ -7,6 +7,7 @@ Viber command bot Flask application
 import json
 import logging
 import re
+import socket
 import subprocess
 import threading
 from logging.handlers import SysLogHandler
@@ -125,6 +126,11 @@ def execute_command(viber_request, command):
     :return: None
     :raises Exception: if message sending fails
     """
+    destination = list()
+    if '@' in command:
+        # Destination is a comma separated list of hosts.
+        command, destination = command.split('@', 1)
+        destination = destination.split(',')
     logger.info('Received command "{}" from user "{}"'.format(
         command, viber_request.sender.name))
     if not command or command == 'help':
@@ -191,6 +197,7 @@ def execute_command(viber_request, command):
         cache.refresh_user(viber_request.sender.id, viber_request.sender.name)
         cache.publish(viber_request.sender.id,
                       bot_commands[command].get('execute'),
+                      destination=destination,
                       name=viber_request.sender.name,
                       message_type='execute',
                       output_format=bot_commands[command].get(
@@ -235,7 +242,8 @@ def command_help():
     return text.strip()
 
 
-def command_thread_target(execute, output_format, user_id, pretext=None):
+def command_thread_target(execute, output_format, user_id, destination,
+                          pretext=None):
     """
     Local command is run in a separate thread.
 
@@ -243,10 +251,14 @@ def command_thread_target(execute, output_format, user_id, pretext=None):
     :param output_format: expected command output format specified in the bot
                           configuration
     :param user_id: user id who will receive the answer
+    :param destination: destination for the command
     :param pretext: text added to the beginning of message
     :return: None
     :raises Exception: if message sending fails
     """
+    if destination and socket.gethostname() not in destination:
+        # Command is not for this host.
+        return
     text, media = execute_local_command(execute, output_format)
     if output_format == 'none':
         return

@@ -77,6 +77,7 @@ def receive_messages(pretext=None):
                 command_thread_target(message.get('text'),
                                       message.get('output_format'),
                                       message.get('user_id'),
+                                      message.get('destination'),
                                       pretext=pretext)
             else:
                 logger.info('Message from {name} ({user_id}): {text}'.format(
