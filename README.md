@@ -10,7 +10,7 @@ The project uses Viber Python Bot API to send and receive messages.
 
 Check API documentation about how to setup bot accounts.
 
-- [get-started](https://developers.viber.com/docs/general/get-started/)
+- [get-started](https://developers.viber.com/docs/all/#lets-get-started)
 
 ## Viber command bot
 
